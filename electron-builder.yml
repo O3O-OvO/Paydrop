@@ -1,6 +1,5 @@
 appId: cn.paydrop.widget
 productName: Paydrop
-electronDist: node_modules/electron/dist
 artifactName: Paydrop-Setup-${version}-${arch}.${ext}
 directories:
   output: release
