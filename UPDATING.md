@@ -15,7 +15,7 @@
    git push origin v1.1.1
    ```
 
-   `.github/workflows/publish-windows.yml` 会在 Windows runner 上构建安装包，并把 `.exe`、`latest.yml` 和差分更新文件发布到该仓库的 Releases。推送标签前也可以在 GitHub Actions 页面手动运行该工作流做一次不发布的试构建。
+   `.github/workflows/publish-windows.yml` 会在 Windows runner 上构建安装包，并把 `.exe` 和 `latest.yml` 发布到该仓库的 Releases。推送标签前也可以在 GitHub Actions 页面手动运行该工作流做一次不发布的试构建。
 3. 从 Releases 安装首版 `Paydrop-Setup-1.1.1-x64.exe`。原便携版用户需要手动运行此安装包一次；不要用便携版测试自动更新。
 
 ## 后续更新
