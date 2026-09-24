@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+.playwright-cli/
+*.log
+.env
+.env.*
+*.pfx
+*.p12
+*.pem
+*.key

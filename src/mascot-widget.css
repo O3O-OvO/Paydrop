@@ -1,0 +1,18 @@
+body{color:#47352e}
+.widget-card{position:relative;background:rgba(217,240,204,.89);border-color:rgba(80,122,86,.25);box-shadow:0 12px 34px rgba(43,69,46,.18);backdrop-filter:blur(18px)}
+.widget-card:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 100% 100%,rgba(128,187,142,.21),transparent 47%);pointer-events:none}
+.widget-header,.widget-label,.widget-rate,.widget-progress,.widget-metrics{position:relative;z-index:2}
+.widget-brand,.widget-brand strong{color:#49352f}.widget-brand span,.rate-caption{color:#799887}
+.window-actions button{color:#718a77}.window-actions button:hover{background:rgba(75,119,84,.14);color:#453128}.window-actions button:last-child:hover{background:#dd9795;color:#fff}
+.widget-label,.widget-label-right,.widget-rate{color:#567761}.status-dot{background:#5ca476;box-shadow:0 0 0 4px rgba(92,164,118,.13)}
+.widget-label-right{margin-right:99px;white-space:nowrap}
+.widget-amount>span{color:#ab713b}.widget-amount strong{max-width:268px;color:#44342e;text-shadow:0 1px rgba(255,255,255,.4)}
+.widget-character{position:absolute;right:12px;top:-31px;width:90px;height:118px;pointer-events:none;z-index:1}
+.widget-character img{position:absolute;right:0;top:0;width:86px;height:auto;filter:drop-shadow(0 4px 2px rgba(60,83,58,.13));animation:mascot-bob 3.5s ease-in-out infinite}
+.widget-coins{position:absolute;inset:0}.widget-falling-coin{left:28px;top:-20px;width:19px;height:19px;line-height:15px;font-size:11px;animation:mascot-drop .85s ease-in forwards}
+.widget-rate svg{color:#528b67}.widget-progress{background:rgba(74,132,89,.2)}.widget-progress span{background:#dfa66c}
+.widget-metrics{border-color:rgba(66,103,74,.2)}.widget-metrics>div{border-color:rgba(66,103,74,.14)}.widget-metrics svg{color:#779baa}.widget-metrics span{color:#6a8374}.widget-metrics strong{color:#44342e}
+.widget-card[data-state='休息中'] .status-dot,.widget-card[data-state='未开工'] .status-dot{background:#d6a573}
+@keyframes mascot-drop{0%{transform:translateY(-18px) rotateY(0);opacity:0}15%{opacity:1}80%{opacity:1}100%{transform:translateY(65px) rotateY(650deg) scale(.5);opacity:0}}
+@keyframes mascot-bob{50%{transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.widget-character img{animation:none}}

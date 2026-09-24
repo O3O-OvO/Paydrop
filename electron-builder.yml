@@ -1,0 +1,25 @@
+appId: cn.paydrop.widget
+productName: Paydrop
+electronDist: node_modules/electron/dist
+artifactName: Paydrop-Setup-${version}-${arch}.${ext}
+directories:
+  output: release
+publish:
+  provider: github
+  releaseType: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+win:
+  icon: electron/paydrop.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: true
+  perMachine: false
+  customNsisBinary:
+    url: https://npmmirror.com/mirrors/electron-builder-binaries/nsis-3.0.4.1/nsis-3.0.4.1.7z
+asar: true

@@ -1,0 +1,8 @@
+.digit-display { display: inline-flex; align-items: baseline; white-space: nowrap; font: inherit; font-variant-numeric: tabular-nums; }
+.widget-metrics strong .digit-display, .metric-copy strong .digit-display { display: inline-flex; font-size: inherit; }
+.widget-metrics strong .digit-display span, .metric-copy strong .digit-display span { display: inline-block; font-size: inherit; }
+.digit-slot, .digit-stable { display: inline-block; width: .6em; height: 1em; line-height: 1em; text-align: center; vertical-align: baseline; }
+.digit-punctuation { width: .3em; }
+.digit-slot { animation: digit-fade .18s ease-out both; }
+@keyframes digit-fade { from { opacity: .75; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .digit-slot { animation: none; } }

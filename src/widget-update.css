@@ -1,0 +1,18 @@
+.window-actions #widget-update[hidden] {
+  display: none;
+}
+
+.window-actions #widget-update:not([hidden]) {
+  color: #fff;
+  background: #2d8163;
+}
+
+body[data-theme="hachiware"] .window-actions #widget-update:not([hidden]) {
+  color: #fff;
+  background: #427d69;
+}
+
+body[data-theme="night"] .window-actions #widget-update:not([hidden]) {
+  color: #252d33;
+  background: #e2bd79;
+}

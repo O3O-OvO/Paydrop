@@ -1,0 +1,12 @@
+.widget-card {
+  opacity: var(--widget-opacity, 1);
+}
+
+body[data-theme="hachiware"] .widget-card {
+  background: #f4faff;
+}
+
+body[data-theme="hachiware"] .widget-card::before {
+  background: url('/hachiware-world.webp') 60% 62% / cover no-repeat;
+  opacity: var(--widget-background-opacity, .08);
+}

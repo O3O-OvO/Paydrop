@@ -1,0 +1,62 @@
+body[data-theme="hachiware"] { color: #47352e; }
+body[data-theme="hachiware"] .widget-card { background: rgba(217, 240, 204, .89); border-color: rgba(80, 122, 86, .25); box-shadow: 0 12px 34px rgba(43, 69, 46, .18); }
+body[data-theme="hachiware"] .widget-brand, body[data-theme="hachiware"] .widget-brand strong { color: #49352f; }
+body[data-theme="hachiware"] .widget-brand span, body[data-theme="hachiware"] .rate-caption { color: #425b65; }
+body[data-theme="hachiware"] .window-actions button { color: #3e5a65; }
+.window-actions #widget-pause[aria-pressed="true"] { background: rgba(225, 177, 105, .24); color: #f4d18f; }
+body[data-theme="hachiware"] .window-actions #widget-pause[aria-pressed="true"] { background: #e6bfc889; color: #795163; }
+body[data-theme="minimal"] .window-actions #widget-pause[aria-pressed="true"] { background: #9dcacb88; color: #315f64; }
+body[data-theme="night"] .window-actions #widget-pause[aria-pressed="true"] { background: #c5a56755; color: #f3d59d; }
+body[data-theme="hachiware"] .widget-label, body[data-theme="hachiware"] .widget-label-right, body[data-theme="hachiware"] .widget-rate { color: #304f5c; }
+body[data-theme="hachiware"] .status-dot { background: #5ca476; box-shadow: 0 0 0 4px #5ca47622; }
+body[data-theme="hachiware"] .widget-amount>span { color: #ab713b; }
+body[data-theme="hachiware"] .widget-amount strong { color: #44342e; max-width: 268px; }
+.widget-character { position: absolute; right: 12px; top: -31px; width: 90px; height: 118px; pointer-events: none; z-index: 1; }
+.widget-character img { position: absolute; right: 0; top: 0; width: 86px; height: auto; filter: drop-shadow(0 4px 2px #3c533a22); animation: mascot-bob 3.5s ease-in-out infinite; }
+body[data-theme="hachiware"] .widget-coins { position: absolute; inset: 0; }
+body[data-theme="hachiware"] .widget-falling-coin { left: 28px; top: -20px; width: 19px; height: 19px; line-height: 15px; font-size: 11px; }
+body[data-theme="hachiware"] .widget-rate svg { color: #528b67; }
+body[data-theme="hachiware"] .widget-progress { background: #4a845933; }
+body[data-theme="hachiware"] .widget-progress span { background: #dfa66c; }
+body[data-theme="hachiware"] .widget-metrics { border-color: #42674a33; }
+body[data-theme="hachiware"] .widget-metrics>div { border-color: #42674a24; }
+body[data-theme="hachiware"] .widget-metrics svg { color: #779baa; }
+body[data-theme="hachiware"] .widget-metrics span { color: #3c5662; }
+body[data-theme="hachiware"] .widget-metrics strong { color: #2d4754; }
+body:not([data-theme="hachiware"]) .widget-character img { display: none; }
+body[data-theme="minimal"] { color: #29434a; }
+body[data-theme="minimal"] .widget-card { background: rgba(248, 255, 255, .63); border-color: rgba(169, 204, 204, .72); box-shadow: 0 12px 30px #27434728; }
+body[data-theme="minimal"] .widget-brand, body[data-theme="minimal"] .widget-brand strong, body[data-theme="minimal"] .widget-amount strong, body[data-theme="minimal"] .widget-metrics strong { color: #284e54; }
+body[data-theme="minimal"] .widget-brand span, body[data-theme="minimal"] .rate-caption, body[data-theme="minimal"] .widget-label, body[data-theme="minimal"] .widget-label-right, body[data-theme="minimal"] .widget-rate, body[data-theme="minimal"] .widget-metrics span { color: #315d65; }
+body[data-theme="minimal"] .window-actions button { color: #426a70; }
+body[data-theme="minimal"] .window-actions button:hover { color: #315f64; background: #b9d9d888; }
+body[data-theme="minimal"] .widget-amount>span, body[data-theme="minimal"] .widget-rate svg, body[data-theme="minimal"] .widget-metrics svg { color: #56959a; }
+body[data-theme="minimal"] .widget-progress { background: #bad6d588; }
+body[data-theme="minimal"] .widget-progress span { background: #60a3a5; }
+body[data-theme="minimal"] .widget-metrics, body[data-theme="minimal"] .widget-metrics>div { border-color: #87aaa944; }
+body[data-theme="minimal"] .status-dot { background: #5ba39e; }
+body[data-theme="minimal"] .widget-falling-coin { background: #c2e5e0; border-color: #e2f8f4; color: #477e80; }
+body[data-theme="night"] { color: #eff0e7; }
+body[data-theme="night"] .widget-card { background: rgba(31, 40, 45, .9); border-color: #72837b88; box-shadow: 0 12px 34px #0b121aaa; }
+body[data-theme="night"] .widget-brand, body[data-theme="night"] .widget-brand strong, body[data-theme="night"] .widget-amount strong, body[data-theme="night"] .widget-metrics strong { color: #f1f1e8; }
+body[data-theme="night"] .widget-brand svg, body[data-theme="night"] .widget-amount>span, body[data-theme="night"] .widget-metrics svg { color: #e3c786; }
+body[data-theme="night"] .widget-brand span, body[data-theme="night"] .rate-caption, body[data-theme="night"] .widget-label, body[data-theme="night"] .widget-label-right, body[data-theme="night"] .widget-rate, body[data-theme="night"] .widget-metrics span { color: #d2e0da; }
+body[data-theme="night"] .window-actions button { color: #d7e3dc; }
+body[data-theme="night"] .status-dot { background: #9bcbad; }
+body[data-theme="night"] .widget-progress { background: #6a786944; }
+body[data-theme="night"] .widget-progress span { background: #ddb97a; }
+body[data-theme="night"] .widget-metrics, body[data-theme="night"] .widget-metrics>div { border-color: #8ca59733; }
+body[data-theme="night"] .widget-falling-coin { background: #dabb78; border-color: #f1dba1; color: #84642a; }
+@keyframes mascot-bob { 50% { transform: translateY(-4px); } }
+body[data-theme="hachiware"] .widget-card { background: url('/hachiware-world.webp') 60% 62% / cover no-repeat; border-color: #d7eaf0; box-shadow: 0 12px 34px #285a7538; }
+body[data-theme="hachiware"] .widget-card:before { content: ''; position: absolute; inset: 0; background: #f4faffec; pointer-events: none; }
+body[data-theme="hachiware"] .widget-header, body[data-theme="hachiware"] .widget-label, body[data-theme="hachiware"] .widget-amount, body[data-theme="hachiware"] .widget-rate, body[data-theme="hachiware"] .widget-progress, body[data-theme="hachiware"] .widget-metrics { position: relative; z-index: 2; }
+body[data-theme="hachiware"] .widget-character { right: 7px; top: -30px; width: 93px; height: 104px; }
+body[data-theme="hachiware"] .widget-character img { width: 91px; filter: drop-shadow(0 5px 3px #3b607533); }
+body[data-theme="hachiware"] .widget-amount strong { color: #2d5265; max-width: 268px; }
+body[data-theme="hachiware"] .widget-progress { background: #91bdd055; }
+body[data-theme="hachiware"] .widget-progress span { background: #dda0ad; }
+body[data-theme="hachiware"] .widget-metrics>div:first-child:after { content: ''; display: block; position: absolute; width: 17px; height: 17px; margin: -38px 0 0 68px; background: url('/hachiware-star.png') center / contain no-repeat; pointer-events: none; }
+body[data-theme="hachiware"] .widget-metrics>div { position: relative; }
+.widget-brand span, .widget-rate, .widget-metrics span { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .widget-character img { animation: none; } }
