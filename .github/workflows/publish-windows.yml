@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -28,16 +32,65 @@ jobs:
             throw "Tag must be v$version"
           }
       - run: npm test
-      - name: Package without publishing
-        if: github.event_name == 'workflow_dispatch'
+      - name: Package Windows installer
         env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: npm run pack:win
-      - name: Package and publish
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-        run: npm run pack:win -- --publish always
+        run: npm run pack:win
+      - name: Preserve installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          if-no-files-found: error
+          path: |
+            release/Paydrop-Setup-*-x64.exe
+            release/Paydrop-Setup-*-x64.exe.blockmap
+            release/latest.yml
+      - name: Publish complete release
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = $env:RELEASE_TAG
+          $assets = @(
+            "release/Paydrop-Setup-$version-x64.exe",
+            "release/Paydrop-Setup-$version-x64.exe.blockmap",
+            'release/latest.yml'
+          )
+          foreach ($asset in $assets) {
+            if (!(Test-Path -LiteralPath $asset) -or (Get-Item -LiteralPath $asset).Length -eq 0) {
+              throw "Missing release asset: $asset"
+            }
+          }
+          $existing = gh release view $tag --json isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if (!(($existing | ConvertFrom-Json).isDraft)) {
+              throw "Release $tag is already published; refusing to replace its assets."
+            }
+          } else {
+            $notes = "docs/releases/$tag.md"
+            if (Test-Path -LiteralPath $notes) {
+              gh release create $tag --draft --verify-tag --title "Paydrop $tag" --notes-file $notes
+            } else {
+              gh release create $tag --draft --verify-tag --title "Paydrop $tag" --generate-notes
+            }
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to create release draft.' }
+          }
+          gh release upload $tag @assets --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to upload release assets; draft remains unpublished.' }
+          $uploaded = gh release view $tag --json assets
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to verify release assets.' }
+          $names = ($uploaded | ConvertFrom-Json).assets.name
+          foreach ($asset in $assets) {
+            if ((Split-Path -Leaf $asset) -notin $names) {
+              throw "Uploaded release is incomplete: $asset"
+            }
+          }
+          gh release edit $tag --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to publish release draft.' }

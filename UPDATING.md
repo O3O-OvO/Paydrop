@@ -22,7 +22,9 @@
 
 先更新代码并运行 `npm version 1.1.2 --no-git-tag-version`，提交 `package.json`、`package-lock.json` 和代码，然后创建并推送 `v1.1.2` 标签。标签必须与包版本一致；未发布的新版本不会被客户端发现。真实验收应从已安装的 `1.1.1` 检查并下载 `1.1.2`，再通过挂件上的重启按钮完成安装。也可以退出应用让下载好的更新自动安装。
 
-本机运行 `npm run pack:win` 制作不上传的安装包，默认更新源是 `O3O-OvO/Paydrop`。可设置 `GITHUB_REPOSITORY` 或 `PAYDROP_GITHUB_REPOSITORY` 为自己的真实仓库来覆盖，不接受 `example/*` 占位源。只有 GitHub Actions 的带标签构建会使用 `--publish always`。旧版便携包的本地构建命令保留为 `npm run pack:portable`。
+本机运行 `npm run pack:win` 制作不上传的安装包，默认更新源是 `O3O-OvO/Paydrop`。可设置 `GITHUB_REPOSITORY` 或 `PAYDROP_GITHUB_REPOSITORY` 为自己的真实仓库来覆盖，不接受 `example/*` 占位源。GitHub Actions 也先执行不上传的构建，再创建单个 Release 草稿，统一上传安装包、`.blockmap` 与 `latest.yml`；确认附件齐全后才公开并标记为最新版，避免构建器并发发布导致附件分散。已公开版本不覆盖；失败的草稿可通过重跑工作流继续。手动试构建只保留 Actions 构建产物，不创建 Release。旧版便携包的本地构建命令保留为 `npm run pack:portable`。
+
+每次正式发布建议添加 `docs/releases/v<版本>.md`，工作流会使用该文件作为发布说明；未提供时由 GitHub 自动生成说明。同一标签的发布任务串行执行，不强制移动已发布标签。
 
 ## 新功能发布验收
 
