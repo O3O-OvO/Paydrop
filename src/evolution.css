@@ -1,0 +1,71 @@
+:root { --tool-text: #274f5c; --tool-muted: #526d75; --tool-line: #cbdde1; --tool-surface: #f9fdfdeF; --tool-accent: #247c76; --tool-soft: #e7f1f0; }
+html,body,#app { font-family: 'Segoe UI','Microsoft YaHei',sans-serif; }
+body[data-theme="night"] { --tool-text: #e6efeb; --tool-muted: #b9cbc5; --tool-line: #485b5b; --tool-surface: #252d33; --tool-accent: #98d1be; --tool-soft: #364b48; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+.work-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; min-height: 66px; margin: 0 0 20px; padding: 12px 0; border-bottom: 1px solid var(--tool-line); position: relative; z-index: 2; color: var(--tool-text); }
+.mode-control { display: inline-flex; align-items: center; padding: 3px; gap: 3px; border: 1px solid var(--tool-line); border-radius: 6px; background: var(--tool-soft); }
+.mode-control button { min-height: 32px; padding: 0 12px; background: transparent; border: 0; border-radius: 4px; color: var(--tool-muted); font-size: 12px; font-weight: 600; }
+.mode-control button[aria-pressed="true"] { color: var(--tool-text); background: var(--tool-surface); box-shadow: 0 1px 3px #172c3320; }
+.record-date { font-size: 11px; color: var(--tool-muted); }
+.session-actions { display: flex; gap: 8px; margin-left: auto; min-height: 36px; }
+.session-actions button { min-height: 36px; }
+.session-end { color: #ac5260; border-color: #d9abb2; }
+.earning-status b { font: inherit; }
+.field select { display: block; width: 100%; height: 41px; margin-top: 8px; border: 1px solid var(--tool-line); border-radius: 5px; background: var(--tool-surface); padding: 0 8px; color: var(--tool-text); font-size: 12px; }
+.field input { min-width: 0; }
+.weekday-picker { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+.weekday-picker label { position: relative; cursor: pointer; }
+.weekday-picker input { position: absolute; opacity: 0; }
+.weekday-picker span { display: grid; place-items: center; min-height: 36px; border: 1px solid var(--tool-line); border-radius: 5px; color: var(--tool-muted); font-size: 11px; }
+.weekday-picker input:checked + span { background: var(--tool-soft); border-color: var(--tool-accent); color: var(--tool-text); font-weight: 700; }
+.weekday-picker input:focus-visible + span { outline: 2px solid var(--tool-accent); outline-offset: 2px; }
+.exception-row { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) 29px; gap: 7px; align-items: center; margin: 7px 0; }
+.exception-row input,.exception-row select { width: 100%; min-width: 0; min-height: 36px; border: 1px solid var(--tool-line); border-radius: 4px; background: var(--tool-surface); color: var(--tool-text); padding: 0 6px; font-size: 12px; }
+.break-row { grid-template-columns: 15px minmax(0,1fr) minmax(0,1fr) 38px 25px; padding: 8px 6px; gap: 6px; }
+.paid-break-check { display: flex; align-items: center; flex-direction: column; gap: 6px; padding-bottom: 9px; color: var(--tool-muted); font-size: 10px; cursor: pointer; }
+.paid-break-check input { accent-color: var(--tool-accent); }
+.timeline-paid-break { position: absolute; height: 10px; background: #7ca7cd; }
+.legend-dot.paid-rest { background: #7ca7cd; }
+.config-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.history-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--tool-line); padding: 0 0 16px; position: relative; z-index: 2; }
+.history-toolbar > span { font-size: 11px; color: var(--tool-muted); }
+.history-totals { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; padding: 26px 0; border-bottom: 1px solid var(--tool-line); color: var(--tool-text); }
+.history-totals > div:not(:last-child) { border-right: 1px solid var(--tool-line); }
+.history-totals span { display: block; font-size: 12px; color: var(--tool-muted); }
+.history-totals strong { display: block; margin-top: 8px; font-size: 27px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.history-table-wrap { overflow-x: auto; margin-top: 18px; }
+.history-table { width: 100%; border-collapse: collapse; text-align: left; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--tool-text); white-space: nowrap; }
+.history-table th { padding: 12px 9px; color: var(--tool-muted); font-size: 11px; background: var(--tool-soft); font-weight: 600; }
+.history-table td { padding: 16px 9px; border-bottom: 1px solid var(--tool-line); }
+.history-table tbody tr:hover { background: var(--tool-soft); }
+.record-status { color: var(--tool-muted); font-size: 11px; }
+.record-status.active { color: var(--tool-accent); font-weight: 700; }
+.history-empty { display: flex; align-items: center; justify-content: center; flex-direction: column; min-height: 280px; gap: 18px; color: var(--tool-muted); }
+.history-empty > svg { width: 34px; height: 34px; }
+.history-empty h2 { font-size: 16px; font-weight: 600; margin: 0; }
+.earnings-number { font-size: 56px; max-width: 100% !important; }
+.earning-main { min-height: 66px; }
+body[data-theme="hachiware"] .earnings-panel .coin-stage { width: 95px; height: 110px; top: -24px; right: 0; }
+body[data-theme="hachiware"] .dashboard-mascot { width: 95px; animation: none; }
+.metric-copy small,.page-heading p,.section-title p { color: var(--tool-muted); }
+.sidebar-note { display: none; }
+body[data-theme="night"] .exception-row input { color-scheme: dark; }
+.history-table button[hidden],.config-actions input[hidden] { display: none; }
+@media (max-width: 900px) { .history-totals strong { font-size: 23px; } .record-date { display: none; } }
+@media (max-width: 650px) {
+  .work-controls { gap: 10px; padding-top: 7px; }
+  .session-actions { margin-left: 0; }
+  .mode-control button { font-size: 11px; padding: 0 9px; }
+  .history-totals { gap: 10px; }
+  .history-totals strong { font-size: 18px; }
+  .history-totals span { font-size: 10px; }
+  .history-table { font-size: 11px; }
+  .topbar { padding: 0 12px; }
+  .breadcrumb { font-size: 11px; }
+  .breadcrumb span { padding: 0 7px; }
+  .earnings-number { font-size: 34px; }
+  body[data-theme="hachiware"] .earnings-panel .coin-stage { width: 80px; right: -7px; }
+  body[data-theme="hachiware"] .dashboard-mascot { width: 80px; }
+  .earning-footer { margin-top: 44px; }
+}

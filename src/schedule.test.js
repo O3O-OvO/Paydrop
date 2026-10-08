@@ -33,14 +33,15 @@ test('multiple breaks are excluded from pay and work time', () => {
   assert.equal(finished.breaks[0].start, '12:00');
 });
 
-test('no breaks and unpaid overtime remain supported', () => {
+test('estimates stop at shift end and overtime is never assumed', () => {
   const noBreaks = { ...settings, breaks: [] };
   assert.equal(scheduleError(noBreaks), '');
   assert.equal(calculateSchedule(noBreaks, at(12, 30)).state, '工作中');
   const late = calculateSchedule(settings, at(18, 30));
-  assert.equal(late.unpaid, 1800);
+  assert.equal(late.unpaid, 0);
+  assert.equal(late.worked, late.scheduled);
   assert.equal(late.earned, settings.dailySalary);
-  assert.equal(calculateSchedule({ ...settings, paidOvertime: true }, at(18, 30)).earned, settings.dailySalary + 1800 * late.rate);
+  assert.equal(calculateSchedule({ ...settings, paidOvertime: true }, at(18, 30)).earned, settings.dailySalary);
 });
 
 test('old settings migrate to one break without changing zero-break schedules', () => {
@@ -49,6 +50,32 @@ test('old settings migrate to one break without changing zero-break schedules', 
   assert.deepEqual(resolveBreaks({ breaks: [] }, fallback), []);
   assert.deepEqual(resolveBreaks({ breakStart: '12:00', breakEnd: '12:00' }, fallback), []);
   assert.deepEqual(resolveBreaks({}, fallback), fallback);
+});
+
+test('overnight shifts and breaks anchor to the previous work date', () => {
+  const night = { ...settings, start: '22:00', end: '06:00', breaks: [{ start: '01:00', end: '01:30' }], workdays: [4] };
+  assert.equal(scheduleError(night), '');
+  const result = calculateSchedule(night, new Date(2026, 8, 25, 2));
+  assert.equal(result.key, '2026-09-24');
+  assert.equal(result.isWorkday, true);
+  assert.equal(result.worked, 3.5 * 3600);
+  assert.equal(result.remaining, 4 * 3600);
+  assert.equal(calculateSchedule(night, new Date(2026, 8, 25, 1, 15)).state, '休息中');
+  const end = calculateSchedule(night, new Date(2026, 8, 25, 6));
+  assert.equal(end.key, '2026-09-24');
+  assert.equal(end.state, '已下班');
+  assert.equal(end.earned, night.dailySalary);
+});
+
+test('paid breaks keep pay and configured days respect date overrides', () => {
+  const paid = { ...settings, breaks: [{ start: '12:00', end: '13:00', paid: true }], workdays: [1] };
+  assert.equal(calculateSchedule(paid, at(12, 30)).earned, 0);
+  const override = { ...paid, exceptions: [{ date: '2026-09-24', working: true }] };
+  const result = calculateSchedule(override, at(12, 30));
+  assert.equal(result.state, '休息中');
+  assert.equal(result.breakTotal, 0);
+  assert.equal(result.worked, 3.5 * 3600);
+  assert.equal(calculateSchedule({ ...settings, exceptions: [{ date: '2026-09-24', working: false }] }, at(12, 30)).state, '休息日');
 });
 
 test('invalid, overlapping and fully unpaid schedules are rejected', () => {

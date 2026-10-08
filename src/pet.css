@@ -1,0 +1,129 @@
+:root {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #354b50;
+  font-synthesis: none;
+  letter-spacing: 0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .5; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 3px solid #759ba8; outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+.pet-shell { display: grid; grid-template-columns: 302px minmax(0, 1fr); min-height: 100dvh; }
+.pet-sidebar { background: #fff; padding: 28px 25px; border-right: 1px solid #dce6e6; z-index: 2; }
+.pet-brand { display: flex; align-items: center; gap: 12px; }
+.pet-brand img { width: 42px; height: 42px; object-fit: contain; }
+.pet-brand strong { display: block; font-size: 21px; }
+.pet-brand span { display: block; margin-top: 5px; font-size: 10px; color: #6c7f82; }
+.pet-sidebar h2 { margin: 36px 0 16px; font-size: 13px; font-weight: 600; color: #687e80; }
+.pet-actions { display: flex; gap: 8px; }
+.pet-extra-shortcuts { margin-top: 8px; }
+.pet-action {
+  width: 50px; height: 44px; display: grid; place-items: center;
+  border: 1px solid #dce7e6; border-radius: 8px; background: #f7fbfa; color: #487363;
+}
+.pet-action:hover { background: #edf5f0; }
+.pet-action[aria-pressed="true"] { background: #e4eee8; border-color: #729e8c; }
+svg { width: 18px; height: 18px; stroke-width: 1.7; }
+.pet-setting {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 51px; border-bottom: 1px solid #eef2f1; font-size: 13px;
+}
+.pet-setting input { width: 16px; height: 16px; accent-color: #558572; }
+.pet-range { display: block; margin: 22px 0; font-size: 13px; }
+.pet-range > span { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.pet-range output { color: #617579; font-variant-numeric: tabular-nums; }
+.pet-range input { width: 100%; accent-color: #6c959f; }
+.pet-links { display: flex; gap: 17px; margin-top: 32px; }
+.pet-links a { color: #516c70; font-size: 12px; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+.pet-links svg { width: 15px; height: 15px; }
+.pet-status { margin-top: 24px; font-size: 12px; color: #617a73; display: flex; gap: 7px; align-items: center; }
+.pet-status::before { content: ""; width: 6px; height: 6px; background: #70a087; border-radius: 50%; }
+.pet-stage {
+  position: relative; min-height: 670px; overflow: hidden; background: #eef4f3;
+  background-image: url("/hachiware-pattern.webp");
+  background-size: 760px;
+}
+.pet-stage::before { content: ""; position: absolute; inset: 0; background: #f0f5f4e8; pointer-events: none; }
+.pet-stage-header { position: absolute; left: 36px; top: 30px; z-index: 1; }
+.pet-stage-header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+.pet-stage-header span { display: block; margin-top: 10px; color: #6a8180; font-size: 12px; }
+.pet-live { position: absolute; right: 32px; top: 33px; text-align: right; z-index: 1; }
+.pet-live small { font-size: 11px; color: #718984; }
+.pet-live strong { display: block; font-size: 19px; margin-top: 8px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.pet-ground { position: absolute; left: 0; right: 0; bottom: 20%; border-top: 1px solid #d2dfdb; }
+.pet-ground::after { content: ""; position: absolute; inset: 0 0 auto; height: 100vh; background: #e2ebe650; }
+.pet-stage-footer { position: absolute; bottom: 25px; left: 36px; display: flex; align-items: center; gap: 9px; color: #718884; font-size: 11px; }
+.pet-stage-footer svg { width: 14px; height: 14px; }
+.pet-restore {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  border: 1px solid #92b2a2; border-radius: 6px; padding: 12px 18px; color: #39634f; background: #fff;
+}
+.desktop-pet { position: absolute; width: 300px; height: 280px; transform-origin: top left; user-select: none; touch-action: none; }
+.pet-bubble {
+  position: absolute; top: 12px; left: 22px; width: 256px; min-height: 45px;
+  padding: 11px 14px; border: 1px solid #c9dcd9; background: #fffffff0; border-radius: 8px;
+  text-align: center; color: #42615e; font-size: 12px; line-height: 1.6;
+  box-shadow: 0 3px 10px #37554a08; pointer-events: none; opacity: 0; transition: opacity .18s;
+}
+.pet-bubble.visible { opacity: 1; }
+.pet-figure {
+  position: absolute; left: 76px; top: 76px; width: 148px; height: 167px;
+  padding: 0; border: 0; background: transparent; cursor: grab; border-radius: 0;
+}
+.pet-figure:active { cursor: grabbing; }
+.pet-sprite { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; transform-origin: 50% 90%; }
+.pet-facing { display: block; width: 100%; height: 100%; transform: scaleX(var(--pet-direction, 1)); }
+.pet-effects { position: absolute; inset: 0; pointer-events: none; }
+.pet-rest-symbol { position: absolute; left: 217px; top: 87px; color: #7097a4; font-size: 19px; opacity: 0; }
+[data-mood="rest"] .pet-rest-symbol { opacity: 1; }
+.pet-heart { position: absolute; left: 225px; top: 100px; color: #d47a8b; opacity: 0; }
+[data-mood="happy"] .pet-heart { animation: pet-love .8s ease-out infinite; }
+.pet-heart svg { width: 23px; height: 23px; fill: #e9b3bf; }
+.pet-shadow { position: absolute; left: 100px; top: 235px; width: 100px; height: 8px; background: #66887c20; border-radius: 50%; pointer-events: none; }
+.pet-tools {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 3px; padding: 3px; background: #ffffffed; border: 1px solid #d4e0df; border-radius: 6px;
+  opacity: 0; visibility: hidden; transition: opacity .15s;
+}
+.desktop-pet:hover .pet-tools, .desktop-pet:focus-within .pet-tools, .desktop-pet.tools-open .pet-tools { opacity: 1; visibility: visible; }
+.pet-tools button { width: 28px; height: 26px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: #536e69; }
+.pet-tools button:hover, .pet-tools button[aria-pressed="true"] { background: #e6eeea; }
+.pet-tools svg { width: 15px; height: 15px; }
+.pet-extra-actions {
+  position: absolute; bottom: 42px; left: 50%; transform: translateX(-50%);
+  display: grid; grid-template-columns: repeat(4, 40px); gap: 5px; padding: 7px;
+  border: 1px solid #c9dcd9; border-radius: 6px; background: #fffffff5;
+  box-shadow: 0 4px 12px #37554a0f; z-index: 2;
+}
+.pet-extra-actions .pet-action { width: 40px; height: 36px; border: 0; background: transparent; }
+.pet-extra-actions .pet-action:hover { background: #e6eeea; }
+.pet-coin { position: absolute; left: 212px; top: 141px; color: #b0811b; animation: pet-coin .9s ease-out both; }
+.pet-coin svg { width: 21px; height: 21px; fill: #f3d982; }
+.pet-toast { position: fixed; z-index: 20; bottom: 15px; left: 50%; transform: translateX(-50%); max-width: 90%; padding: 9px 15px; font-size: 12px; background: #fff; border: 1px solid #c9dcd9; border-radius: 6px; }
+[data-mood="drag"] .pet-sprite { transform: rotate(7deg) translateY(-5px); }
+.pet-still .pet-heart { animation: none; }
+body[data-native="true"] { overflow: hidden; background: transparent; }
+body[data-native="true"] .desktop-pet { top: 0; left: 0; }
+@keyframes pet-love { 0% { opacity: 0; transform: translateY(0) scale(.8); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-23px) scale(1); } }
+@keyframes pet-coin { 0% { opacity: 0; transform: translateY(10px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px) rotate(12deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .pet-sprite, .pet-heart, .pet-coin { animation: none !important; }
+  .pet-bubble, .pet-tools { transition: none; }
+}
+@media (max-width: 760px) {
+  .pet-shell { grid-template-columns: minmax(0, 1fr); }
+  .pet-stage { min-height: 520px; grid-row: 1; }
+  .pet-sidebar { padding: 22px 25px; border-right: 0; border-top: 1px solid #dce6e6; }
+  .pet-sidebar h2 { margin-top: 25px; }
+  .pet-stage-header { left: 22px; top: 22px; }
+  .pet-stage-header h1 { font-size: 19px; }
+  .pet-live { right: 20px; top: 24px; }
+  .pet-live strong { font-size: 16px; }
+  .pet-stage-footer { left: 22px; }
+}

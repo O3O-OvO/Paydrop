@@ -2,6 +2,8 @@ node_modules/
 dist/
 release/
 .playwright-cli/
+output/playwright/
+output/imagegen/
 *.log
 .env
 .env.*

@@ -1,0 +1,13 @@
+.widget-metrics { margin-top: 12px; padding-top: 12px; }
+.widget-metrics strong { margin-top: 7px; }
+.widget-session { position: absolute; left: 20px; right: 17px; bottom: 7px; z-index: 3; display: flex; justify-content: space-between; align-items: center; height: 27px; color: inherit; }
+.widget-session > span { font-size: 9px; opacity: .9; font-variant-numeric: tabular-nums; }
+.widget-session > div { display: flex; gap: 7px; }
+.widget-session button { display: grid; place-items: center; width: 27px; height: 26px; border: 1px solid currentColor; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
+.widget-session button:hover { background: #89bbb433; }
+.widget-session svg { width: 13px; height: 13px; }
+.widget-toast { position: absolute; left: 15px; right: 15px; bottom: 37px; z-index: 20; padding: 10px; border-radius: 5px; background: #263e46; color: #fff; font-size: 11px; line-height: 1.5; }
+.widget-toast[hidden],.window-actions button[hidden] { display: none; }
+.widget-card[data-state="休息日"] .status-dot,.widget-card[data-state="待打卡"] .status-dot,.widget-card[data-state="临时休息"] .status-dot { background: #d6ad64; }
+.widget-brand span { letter-spacing: 0; }
+.widget-amount strong { height: 1.1em; }

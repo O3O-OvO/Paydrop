@@ -27,7 +27,7 @@ jobs:
           if ("v$version" -ne "${{ github.ref_name }}") {
             throw "Tag must be v$version"
           }
-      - run: node --test src/schedule.test.js electron/updater.test.cjs
+      - run: npm test
       - name: Package without publishing
         if: github.event_name == 'workflow_dispatch'
         env:

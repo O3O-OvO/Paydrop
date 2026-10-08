@@ -1,0 +1,34 @@
+html, body, #widget { height: var(--widget-height, 304px); }
+.widget-card { height: calc(var(--widget-height, 304px) - 12px); }
+.widget-header { padding-left: 12px; padding-right: 8px; }
+.widget-brand { gap: 5px; flex: none; }
+.widget-brand > span:last-child { display: none; }
+.window-actions button { width: 27px; }
+#widget-pet[aria-pressed="true"] { background: #89bbb433; }
+.widget-companion {
+  position: absolute; top: 254px; left: 20px; right: 17px; height: 92px;
+  display: flex; align-items: center; gap: 10px; border-top: 1px solid #87aaa933;
+  z-index: 3; color: inherit; -webkit-app-region: no-drag;
+}
+.widget-companion[hidden] { display: none; }
+.widget-companion button {
+  display: grid; place-items: center; padding: 0; border: 0; border-radius: 4px;
+  background: transparent; color: inherit; cursor: pointer;
+}
+.widget-companion button:focus-visible, #widget-pet:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.widget-companion button:disabled { opacity: .45; cursor: default; }
+.widget-companion-figure { width: 80px; height: 90px; flex: none; }
+.widget-companion-figure canvas { display: block; width: 80px; height: 90px; pointer-events: none; }
+.widget-companion-content { flex: 1; min-width: 0; }
+.widget-companion-heading { display: flex; align-items: center; gap: 8px; height: 25px; font-size: 10px; }
+.widget-companion-heading strong { font-size: 12px; }
+.widget-companion-heading > span { opacity: .85; }
+.widget-companion-heading button { width: 25px; height: 25px; margin-left: auto; }
+.widget-companion svg { width: 14px; height: 14px; stroke-width: 1.8; }
+.widget-companion-message { margin: 3px 0 8px; font-size: 10px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.widget-companion-actions { display: flex; gap: 4px; }
+.widget-companion-actions button { width: 27px; height: 27px; flex: none; background: #89bbb41a; }
+.widget-companion-actions button:hover, .widget-companion-heading button:hover, .widget-companion-actions [aria-pressed="true"] { background: #89bbb444; }
+body[data-theme="night"] .widget-companion { border-color: #8ca59733; }
+body[data-theme="night"] .widget-companion-actions button { background: #d2e0da12; }
+body[data-theme="night"] .widget-companion-actions button:hover, body[data-theme="night"] .widget-companion-actions [aria-pressed="true"] { background: #d2e0da30; }

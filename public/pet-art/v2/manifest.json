@@ -1,0 +1,559 @@
+{
+  "version": 2,
+  "frameSize": [
+    256,
+    288
+  ],
+  "baseline": 274,
+  "animations": {
+    "idle": {
+      "file": "idle.png",
+      "frames": 6,
+      "durations": [
+        1800,
+        180,
+        70,
+        110,
+        70,
+        500
+      ],
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "scale": 0.6595,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3a325610087d0810867b6f2c41e8e",
+        "generatedAt": "2026-10-05T13:17:08.798Z",
+        "prompt": "Use case: stylized-concept. Generate a production sprite strip for Paydrop's transparent desktop pet. The previously displayed full-body Hachiware/小八 PNG is the identity reference. Preserve exactly that white round cat, blue forehead patch and blue pointed ears, warm dark brown rounded hand-drawn outlines, tiny body, huge round head, pink cheek blush, shiny dark brown eyes. This asset is the IDLE / BLINK LOOP, not a pose collection. Exactly SIX separate frames in ONE horizontal row, equally sized square cells, left to right in chronological order. Frame 1 eyes open neutral standing. Frame 2 tiny inhale, eyes open. Frame 3 eyelids half lowered. Frame 4 eyes fully gently closed, two curved eyelid lines. Frame 5 eyes half reopening. Frame 6 same open-eyed neutral pose as frame 1. Fixed camera, same head size, same character center, identical foot baseline in every cell, same line thickness and blue patch shape. Every cell must contain the whole character with margins; no limbs or ears clipped, no overlap between neighboring cells. Continuous coherent movement suitable for animation. Flat cute hand-drawn sticker style faithful to the reference, not 3D, not pixel art. True transparent alpha background, absolutely NO checkerboard image, no scene, no grid lines, no cell frames, no floor shadow, no words, no numbers, no arrows, no watermark. Wide 6:1 strip, approximately 1536x256 or larger. This is new pose artwork derived from the reference; redraw facial eyelids, do not simply duplicate the open-eye illustration."
+      },
+      "frameBounds": [
+        [
+          18,
+          25,
+          237,
+          274
+        ],
+        [
+          18,
+          25,
+          237,
+          274
+        ],
+        [
+          18,
+          25,
+          237,
+          274
+        ],
+        [
+          18,
+          25,
+          237,
+          274
+        ],
+        [
+          18,
+          25,
+          238,
+          274
+        ],
+        [
+          19,
+          24,
+          237,
+          274
+        ]
+      ]
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 6,
+      "durations": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5721,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3a46cd4a087d0b5430ae4eb5ac619",
+        "generatedAt": "2026-10-05T13:22:39.322Z",
+        "prompt": "Create a real transparent PNG animation sprite sheet of Hachiware / 小八, using the full-body blue-and-white cat reference visible earlier. Six sequential WALKING frames, arranged in a strict 3-column by 2-row grid, all cells equal square size. Read frames left-to-right then top-to-bottom. Same scale and ground baseline in every cell. Frame 1 right foot forward, left paw forward; frame 2 passing pose; frame 3 left foot forward, right paw forward; frame 4 passing pose; frame 5 right foot lifting; frame 6 return to frame 1. Feet and paws must visibly change position between frames. Three-quarter view looking right. Keep his very large rounded head, tiny white body, sky-blue forehead cap and ears, pink cheeks, shiny brown eyes, thick warm brown rounded cartoon outlines. Complete full-body character in each cell, room around ears and feet, no overlap between cells. Truly transparent alpha background; no fake checkerboard background, no labels or text, no grid lines or cell borders, no scenery, no shadow. Consistent flat hand-drawn sticker artwork suitable for a looping desktop pet, not 3D and not pixel art."
+      },
+      "frameBounds": [
+        [
+          16,
+          28,
+          240,
+          274
+        ],
+        [
+          23,
+          28,
+          232,
+          274
+        ],
+        [
+          14,
+          25,
+          242,
+          274
+        ],
+        [
+          21,
+          31,
+          235,
+          274
+        ],
+        [
+          13,
+          29,
+          242,
+          274
+        ],
+        [
+          17,
+          30,
+          238,
+          274
+        ]
+      ]
+    },
+    "happy": {
+      "file": "happy.png",
+      "frames": 6,
+      "durations": [
+        100,
+        120,
+        130,
+        170,
+        100,
+        130
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.569,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3a51d0db887d0be525b5013c50146",
+        "generatedAt": "2026-10-05T13:25:38.169Z",
+        "prompt": "Generate a true transparent PNG animation sprite sheet for Hachiware / 小八, for the Paydrop desktop pet. Use the originally shown full-body character reference as identity reference: white cat, disproportionately large rounded head, short tiny body, blue cap-like forehead patch and blue ears, dark warm brown thick rounded hand-drawn outlines, shiny brown eyes, pink cheeks. Match the clean flat sticker drawing style of the reference and the walking sheet already generated. This asset is HAPPY HOP. Exactly 6 consecutive frames in an equal 3-column by 2-row square grid, ordered left to right then top to bottom. Each cell contains one complete character with transparent margin. Frame 1: smiling standing with paws up. Frame 2: bend knees and lower body slightly to prepare jump. Frame 3: spring up, feet off baseline and paws raised, happy open mouth. Frame 4: highest point of gentle jump, cheerful closed eyes, paws up. Frame 5: landing with bent knees and body slightly lower. Frame 6: return to standing smiling paws up, consistent with frame 1 for a seamless cycle. Fixed camera, same drawing scale, same character proportions, same blue markings and line thickness. Use ONE identical imaginary ground baseline within every cell; jump heights are deliberate motion above it. Do not arbitrarily center each jumping frame vertically. Keep all ears, feet and paws inside cells. Transparent alpha background, no fake checkerboard pattern, no text, no labels, no borders, no ground, no shadow, no extra characters, no stickers or heart ornaments outside the character. Clearly distinct body poses, not six copies of the same pose."
+      },
+      "frameBounds": [
+        [
+          24,
+          44,
+          231,
+          274
+        ],
+        [
+          25,
+          73,
+          230,
+          274
+        ],
+        [
+          28,
+          24,
+          227,
+          250
+        ],
+        [
+          28,
+          7,
+          228,
+          228
+        ],
+        [
+          23,
+          66,
+          232,
+          274
+        ],
+        [
+          24,
+          47,
+          231,
+          274
+        ]
+      ]
+    },
+    "eat": {
+      "file": "eat.png",
+      "frames": 6,
+      "durations": [
+        260,
+        180,
+        190,
+        260,
+        260,
+        260
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5496,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3a5a17ba087d082cdd706ca47d91a",
+        "generatedAt": "2026-10-05T13:27:53.446Z",
+        "prompt": "Generate a production transparent PNG animation sprite sheet of Hachiware / 小八 EATING TOAST for a desktop pet. Identity reference is the original full-body white cat with a big rounded head, blue cap-shaped forehead marking and blue pointed ears, shiny brown eyes, pink cheek blush, tiny rounded white body and thick warm dark brown rounded outlines. Match the flat hand-drawn sticker style and consistent character scale of the walking and happy-hop sheets already shown. Exactly SIX successive frames in a 3-column by 2-row grid of equally sized square cells, frame order left to right then top to bottom. Frame 1: standing, holding a small toast slice in both paws at chest level, eyes open. Frame 2: lifting the toast to the mouth, eyes eager. Frame 3: taking a bite, mouth touching toast, eyes squeezed happily. Frame 4: chewing with slightly puffed cheeks, toast visibly has ONE small bite. Frame 5: lowering the toast, smiling softly. Frame 6: returns to frame 1 holding the toast ready for a repeat. Changes in paws, mouth and eyelids should be visibly drawn frame-by-frame. Exact same head, ears, body proportions, blue markings, outlines, and horizontal center and foot baseline for all frames. Full body visible with generous transparent margin; no overlapping cells, no ears or feet cut off. Toast is integrated into the character illustration, not a separate floating icon. Genuine alpha-transparent background, no checkerboard pattern, no floor, no ground shadows or glow, no text, no labels, no borders, no arrows, no scenery, no watermark."
+      },
+      "frameBounds": [
+        [
+          18,
+          29,
+          238,
+          274
+        ],
+        [
+          18,
+          29,
+          237,
+          274
+        ],
+        [
+          18,
+          29,
+          238,
+          274
+        ],
+        [
+          18,
+          29,
+          237,
+          274
+        ],
+        [
+          18,
+          29,
+          237,
+          274
+        ],
+        [
+          18,
+          29,
+          237,
+          274
+        ]
+      ]
+    },
+    "rest": {
+      "file": "rest.png",
+      "frames": 6,
+      "durations": [
+        700,
+        500,
+        600,
+        800,
+        400,
+        500
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.534,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3a5d8f1a887d0bb61b94e367a0ae4",
+        "generatedAt": "2026-10-05T13:28:40.905Z",
+        "prompt": "Generate a real transparent PNG animation sprite sheet for Hachiware / 小八's REST / DOZE loop in a desktop companion. Use the original full-body reference and keep exactly his identity: very large round white cat head, small white body, sky-blue cap-shaped forehead patch and blue pointed ears, warm dark brown thick smooth hand-drawn outline, soft pink cheeks. Keep the same flat sticker artwork, head proportions and blue tone as the walking and eating animation sheets. Exactly 6 consecutive frames, strict 3 columns by 2 rows of equally sized square cells. Read left to right then top to bottom. All frames show the SAME relaxed seated resting pose, front three-quarter view, not standing, paws tucked in and short feet visible. Frame 1 seated with eyes half closed. Frame 2 eyelids close. Frame 3 eyes peacefully closed, very slight inhale expanding tiny chest. Frame 4 small exhale, eyes still closed, head nods a tiny amount. Frame 5 eyelids half reopen. Frame 6 same seated pose as frame 1, sleepy smile. This must be a coherent gentle loop with visible eyelid and body pose changes, not unrelated sleeping poses. Consistent scale, horizontal center, and seated ground baseline across all six cells. Full cat visible in each cell with margin, no ears or feet cropped. Truly transparent alpha background, no fake checkerboard pattern, no colored backdrop, no glow or drop shadow, no ground plane, no Z letters, no text or labels, no cell borders, no scenery, no extra props. No 3D render, no pixel art."
+      },
+      "frameBounds": [
+        [
+          18,
+          33,
+          237,
+          274
+        ],
+        [
+          18,
+          35,
+          237,
+          274
+        ],
+        [
+          18,
+          34,
+          237,
+          274
+        ],
+        [
+          17,
+          41,
+          239,
+          274
+        ],
+        [
+          18,
+          39,
+          237,
+          274
+        ],
+        [
+          18,
+          37,
+          237,
+          274
+        ]
+      ]
+    },
+    "wave": {
+      "file": "wave.png",
+      "frames": 6,
+      "durations": [
+        240,
+        160,
+        220,
+        220,
+        220,
+        260
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5281,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3ad3a6de487d0adb045d0ab837f6f",
+        "generatedAt": "2026-10-05T14:00:24.967Z",
+        "prompt": "Use case: stylized-concept. Asset: transparent desktop-pet animation sprite sheet. Use the Hachiware/小八 six-frame idle strip just displayed as the identity AND style reference: huge round white cat head, very small white body, muted sky-blue cap-shaped forehead and blue pointy ears, warm dark brown rounded outline, dark brown shiny eyes, pink cheeks. Generate a new HELLO WAVE action, six genuine successive drawings, arranged in a strict THREE-COLUMN by TWO-ROW grid of equal square cells, frame order left to right then top to bottom. Frame 1 front-facing, paw resting at chest, friendly smile. Frame 2 lifts right paw beside cheek. Frame 3 raised paw tilts outward in greeting, eyes smiling. Frame 4 raised paw tilts inward. Frame 5 raised paw tilts outward again with a little happy closed-eye smile. Frame 6 lowers paw to match frame 1. Paw shape/placement and eyelids must genuinely differ between frames, not six duplicated pictures. Keep the camera, head size, body proportions, blue markings, line weight and foot baseline identical. One complete full-body character per cell, no ears/feet clipping, generous margins, no overlap between cells. Match the clean flat hand-drawn sticker style of the reference, not 3D or pixel art. Genuine alpha-transparent background, NO checkerboard picture, NO colored backdrop, glow, ground or drop shadow. No words, numbers, labels, borders, scenery, watermarks, or extra characters."
+      },
+      "frameBounds": [
+        [
+          18,
+          37,
+          238,
+          274
+        ],
+        [
+          19,
+          36,
+          237,
+          274
+        ],
+        [
+          14,
+          35,
+          242,
+          274
+        ],
+        [
+          11,
+          39,
+          245,
+          274
+        ],
+        [
+          14,
+          39,
+          242,
+          274
+        ],
+        [
+          18,
+          40,
+          237,
+          274
+        ]
+      ]
+    },
+    "stretch": {
+      "file": "stretch.png",
+      "frames": 6,
+      "durations": [
+        250,
+        350,
+        450,
+        600,
+        300,
+        250
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5245,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3ad7ce45087d0aec506c80b35f364",
+        "generatedAt": "2026-10-05T14:01:36.902Z",
+        "prompt": "Generate a genuine alpha-transparent PNG sprite sheet for Hachiware / 小八 STRETCHING AND YAWNING, for a desktop companion. The six-frame idle strip shown earlier is the identity and style reference. Preserve the enormous round white cat head, tiny white body, muted sky-blue cap-shaped forehead and blue ears, soft pink cheeks, dark brown rounded hand-drawn outline and shiny brown eyes. Six sequential frames in a strict THREE-column by TWO-row grid of equal square cells, ordered left to right then top to bottom. Frame 1 relaxed front-facing standing, paws down. Frame 2 paws rising up beside head, mouth starts a small yawn. Frame 3 both paws stretched upward, eyes gently closed, small round yawning mouth. Frame 4 stretch peaks with a slight backward lean and stretched small torso, eyes still closed. Frame 5 lowers paws toward cheeks, eyes reopening. Frame 6 returns to neutral standing, a refreshed small smile, matching frame 1. Clearly distinct arm, eyelid and mouth drawings; preserve head size and facial markings. Feet stay on the same baseline in every cell, fixed camera and scale; let arms stretch within generous upper margins. Complete character inside each cell, no clipping or overlap. Clean flat hand-drawn sticker artwork faithful to the reference, not 3D and not pixel art. True transparent alpha background, no checkerboard picture, no shadows or glow, no floor, no backdrop, no text, no letters or numbers, no borders, no scenery, no extra characters or floating decorative marks."
+      },
+      "frameBounds": [
+        [
+          20,
+          37,
+          235,
+          274
+        ],
+        [
+          23,
+          33,
+          233,
+          274
+        ],
+        [
+          22,
+          25,
+          234,
+          274
+        ],
+        [
+          15,
+          32,
+          240,
+          274
+        ],
+        [
+          25,
+          49,
+          231,
+          274
+        ],
+        [
+          24,
+          48,
+          231,
+          274
+        ]
+      ]
+    },
+    "dance": {
+      "file": "dance.png",
+      "frames": 6,
+      "durations": [
+        180,
+        180,
+        180,
+        200,
+        180,
+        180
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5479,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3adc3ff4487d0b55cb43ff9112ac3",
+        "generatedAt": "2026-10-05T14:02:43.326Z",
+        "prompt": "Create a true transparent PNG six-frame sprite sheet for Hachiware / 小八 JOYFUL SIDE-TO-SIDE DANCE. Use the previously displayed idle strip as the identity reference: big round white head, tiny white cat body, muted sky-blue forehead cap and blue pointy ears, warm dark brown smooth outlines, shiny dark eyes, soft pink cheeks. Match the flat hand-drawn sticker aesthetic and character proportions of the existing animation set. Strict grid: THREE columns, TWO rows, exactly six equally sized square cells, chronological left-to-right then top-to-bottom. Frame 1 stands smiling, both paws near chest. Frame 2 leans slightly left, right paw up, left paw out. Frame 3 leans slightly right, left paw up, right paw out. Frame 4 little knee bend, both paws up, happy closed-eye smile. Frame 5 returns to a slight left lean, paws swept sideways, open smile. Frame 6 returns to upright standing like frame 1. Draw distinct arms, torso lean and legs in each frame, without changing head scale or facial markings. This is a grounded playful dance, NOT a jumping action; feet stay near the same baseline. Full body inside every cell, generous margin, no clipped ears/paws/feet, no overlaps. Genuine alpha transparency; no checkerboard image, no glow, shadow, floor, backdrop, cell borders, text, music notes, labels, decorations, extra characters or watermark. No 3D and no pixel art."
+      },
+      "frameBounds": [
+        [
+          23,
+          30,
+          233,
+          274
+        ],
+        [
+          23,
+          25,
+          233,
+          274
+        ],
+        [
+          25,
+          26,
+          230,
+          274
+        ],
+        [
+          22,
+          51,
+          234,
+          274
+        ],
+        [
+          24,
+          36,
+          231,
+          274
+        ],
+        [
+          23,
+          35,
+          233,
+          274
+        ]
+      ]
+    },
+    "coin": {
+      "file": "coin.png",
+      "frames": 6,
+      "durations": [
+        260,
+        240,
+        420,
+        420,
+        260,
+        260
+      ],
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "scale": 0.5313,
+      "generation": {
+        "tool": "native image_generation",
+        "generationId": "ig_0e0c5cb917f80412016ac3adfe526487d0869c87c9ab3973c4",
+        "generatedAt": "2026-10-05T14:04:30.614Z",
+        "prompt": "Generate a genuine transparent PNG animation sprite sheet of Hachiware / 小八 HUGGING A GOLD COIN for a salary desktop companion. Use the earlier displayed six-frame idle strip as identity/style reference: disproportionately big white rounded cat head, tiny white body, muted sky-blue cap-shaped forehead and blue pointed ears, warm dark brown smooth rounded outline, shiny dark brown eyes, pink cheek blush. Exactly six sequential full-body frames in a strict THREE-column by TWO-row equal-cell grid, ordered left to right then top to bottom. Frame 1 holding ONE small round shiny gold coin with both paws at chest, coin face contains just a small embossed five-point star, no text. Frame 2 lifts coin slightly toward cheek. Frame 3 hugs coin close, eyes closed happily, cheeks smiling. Frame 4 rocks very slightly while hugging the coin, head tilted a little, happy eyes. Frame 5 opens eyes and lowers the coin a little. Frame 6 returns to frame 1. Clearly distinct drawn paw, eye and mouth positions and coin placement. Keep coin size, head scale, character markings, line weight and foot baseline consistent, fixed camera. The coin must be integrated into the drawing and grasped by paws, not float like a UI icon. Whole cat and coin visible within each cell with ample transparent margins; no clipped ears, feet or overlapping cells. Clean flat hand-drawn sticker style matching the existing set, not 3D, not pixel art. Truly alpha-transparent background, no checkerboard image, no colored backdrop, no glow or drop shadow, no ground, no text, currency letters, logos, labels, grid borders, scenery, watermark, extra coins or extra characters."
+      },
+      "frameBounds": [
+        [
+          19,
+          34,
+          237,
+          274
+        ],
+        [
+          9,
+          25,
+          247,
+          274
+        ],
+        [
+          20,
+          35,
+          235,
+          274
+        ],
+        [
+          16,
+          29,
+          239,
+          274
+        ],
+        [
+          19,
+          37,
+          236,
+          274
+        ],
+        [
+          19,
+          38,
+          236,
+          274
+        ]
+      ]
+    }
+  }
+}

@@ -5,10 +5,16 @@ directories:
   output: release
 publish:
   provider: github
+  owner: O3O-OvO
+  repo: Paydrop
   releaseType: release
 files:
   - dist/**/*
   - electron/**/*
+  - src/data-model.js
+  - src/settings.js
+  - src/schedule.js
+  - src/work-log.js
   - package.json
 win:
   icon: electron/paydrop.ico

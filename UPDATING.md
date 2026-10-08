@@ -22,7 +22,11 @@
 
 先更新代码并运行 `npm version 1.1.2 --no-git-tag-version`，提交 `package.json`、`package-lock.json` 和代码，然后创建并推送 `v1.1.2` 标签。标签必须与包版本一致；未发布的新版本不会被客户端发现。真实验收应从已安装的 `1.1.1` 检查并下载 `1.1.2`，再通过挂件上的重启按钮完成安装。也可以退出应用让下载好的更新自动安装。
 
-本机可设置 `GITHUB_REPOSITORY=OWNER/REPO`，再运行 `npm run pack:win` 制作不上传的安装包。只有 GitHub Actions 的带标签构建会使用 `--publish always`。旧版便携包的本地构建命令保留为 `npm run pack:portable`。
+本机运行 `npm run pack:win` 制作不上传的安装包，默认更新源是 `O3O-OvO/Paydrop`。可设置 `GITHUB_REPOSITORY` 或 `PAYDROP_GITHUB_REPOSITORY` 为自己的真实仓库来覆盖，不接受 `example/*` 占位源。只有 GitHub Actions 的带标签构建会使用 `--publish always`。旧版便携包的本地构建命令保留为 `npm run pack:portable`。
+
+## 新功能发布验收
+
+推送新标签前运行 `npm test` 和 `npm run build`；检查安装包内的 `app-update.yml` 的 owner/repo 是真实仓库，并确认 `src/data-model.js`、`src/settings.js`、`src/schedule.js`、`src/work-log.js` 随安装包一起发布。数据升级后使用 `data.json` 与备份，原 `settings.json` 不删除。实际升级验收应从已安装旧版本完成下载、重启、数据迁移和托盘恢复，不只检查 GitHub Actions 构建成功。
 
 ## 签名与安全
 

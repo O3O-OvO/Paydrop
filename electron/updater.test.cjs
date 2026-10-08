@@ -66,3 +66,18 @@ test('no available update reports the installed version as current', async () =>
   assert.equal(fixture.service.getState().phase, 'current');
   assert.equal(fixture.service.getState().currentVersion, '1.1.0');
 });
+
+test('update failures provide actionable diagnostics and permit retry', async () => {
+  const fixture = setup();
+  const error = new Error('Network unavailable');
+  error.code = 'ENOTFOUND';
+  fixture.updater.checkForUpdates = async () => { throw error; };
+  await fixture.service.check();
+  assert.equal(fixture.service.getState().phase, 'error');
+  assert.equal(fixture.service.getState().errorCode, 'ENOTFOUND');
+  assert.match(fixture.service.getState().errorMessage, /网络/);
+  fixture.updater.checkForUpdates = async () => fixture.updater.emit('update-not-available', {});
+  await fixture.service.check();
+  assert.equal(fixture.service.getState().phase, 'current');
+  assert.equal(fixture.service.getState().errorCode, undefined);
+});

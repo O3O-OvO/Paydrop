@@ -4,8 +4,8 @@ const counters = new WeakMap();
 const DURATION = 700;
 const MAX_STEPS = 12;
 
-function formatAmount(units) {
-  return (units / 10000).toLocaleString('zh-CN', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+function formatAmount(units, precision = 4) {
+  return (units / 10000).toLocaleString('zh-CN', { minimumFractionDigits: precision, maximumFractionDigits: precision });
 }
 
 function stepSize(delta) {
@@ -17,7 +17,7 @@ function stepSize(delta) {
 
 function settle(element, state, units) {
   state.displayed = units;
-  const text = formatAmount(units);
+  const text = formatAmount(units, state.precision);
   updateDisplay(element, text);
   element.setAttribute('aria-label', text);
 }
@@ -61,23 +61,25 @@ function updateDisplay(element, text) {
   }
 }
 
-function rollStep(element, to) {
-  const next = formatAmount(to);
+function rollStep(element, to, precision) {
+  const next = formatAmount(to, precision);
   updateDisplay(element, next);
   element.setAttribute('aria-label', next);
 }
 
-export function updateCountedAmount(element, target, animate = true, onWholeYuan) {
-  if (!element) return;
+export function updateCountedAmount(element, target, animate = true, onWholeYuan, precision = 4) {
+  if (!element || !Number.isFinite(target)) return;
   const roundedTarget = Math.round(target * 10000);
   let state = counters.get(element);
   if (!state) {
-    state = { displayed: roundedTarget, target: roundedTarget, timer: null };
+    state = { displayed: roundedTarget, target: roundedTarget, timer: null, precision };
     counters.set(element, state);
     settle(element, state, roundedTarget);
     return;
   }
-  if (state.target === roundedTarget && animate) return;
+  const precisionChanged = state.precision !== precision;
+  state.precision = precision;
+  if (state.target === roundedTarget && animate && !precisionChanged) return;
   if (state.timer !== null) clearTimeout(state.timer);
   state.timer = null;
   state.target = roundedTarget;
@@ -85,13 +87,13 @@ export function updateCountedAmount(element, target, animate = true, onWholeYuan
   const delta = roundedTarget - state.displayed;
   const unit = Math.max(stepSize(delta), Math.ceil(delta / MAX_STEPS));
   const steps = Math.ceil(delta / unit);
-  if (!animate || document.hidden || delta <= 0) {
+  if (!animate || document.hidden || delta <= 0 || precisionChanged) {
     settle(element, state, roundedTarget);
     return;
   }
   if (!steps) return;
   const start = state.displayed;
-  if (formatAmount(start).length !== formatAmount(roundedTarget).length) {
+  if (formatAmount(start, precision).length !== formatAmount(roundedTarget, precision).length) {
     settle(element, state, roundedTarget);
     if (Math.floor(start / 10000) < Math.floor(roundedTarget / 10000)) onWholeYuan?.();
     return;
@@ -99,9 +101,10 @@ export function updateCountedAmount(element, target, animate = true, onWholeYuan
   const stepDuration = DURATION / steps;
   let index = 0;
   const next = () => {
+    if (!element.isConnected) { state.timer = null; return; }
     const from = state.displayed;
     const to = Math.min(roundedTarget, start + (index + 1) * unit);
-    rollStep(element, to);
+    rollStep(element, to, precision);
     state.displayed = to;
     if (Math.floor(from / 10000) < Math.floor(to / 10000)) onWholeYuan?.();
     index += 1;
