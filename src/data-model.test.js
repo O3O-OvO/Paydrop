@@ -73,3 +73,26 @@ test('corrupt versioned data is rejected for backup recovery', () => {
   assert.throws(() => normalizeData({ ...state, records: [{ id: '<script>' }] }), /损坏/);
   assert.throws(() => normalizeData({ ...state, schemaVersion: 99 }), /不兼容/);
 });
+
+test('a confirmed end only finishes the same active record and preserves history', () => {
+  const at = hour => new Date(2026, 9, 5, hour);
+  let state = applyOperation(normalizeData(), { type: 'work', action: 'start' }, at(9));
+  const id = state.records[0].id;
+  const previous = structuredClone(state);
+  assert.throws(() => applyOperation(state, { type: 'work', action: 'end', expectedRecordId: 'stale-id' }, at(10)), /班次已变化/);
+  assert.deepEqual(state, previous);
+  state = applyOperation(state, { type: 'work', action: 'end', expectedRecordId: id }, at(10));
+  assert.equal(state.records[0].finishedAt, at(10).getTime());
+  assert.equal(state.records.length, 1);
+});
+
+test('a stale confirmation cannot end a new shift or a shift already auto-finished', () => {
+  const at = (hour, day = 5) => new Date(2026, 9, day, hour);
+  let state = applyOperation(normalizeData(), { type: 'work', action: 'start' }, at(9));
+  const oldId = state.records[0].id;
+  assert.throws(() => applyOperation(state, { type: 'work', action: 'end', expectedRecordId: oldId }, at(19)), /班次已变化/);
+  state = applyOperation(state, { type: 'advance' }, at(19));
+  state = applyOperation(state, { type: 'work', action: 'start' }, at(9, 6));
+  assert.throws(() => applyOperation(state, { type: 'work', action: 'end', expectedRecordId: oldId }, at(10, 6)), /班次已变化/);
+  assert.equal(state.records[0].finishedAt, null);
+});

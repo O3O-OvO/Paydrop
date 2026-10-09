@@ -36,20 +36,32 @@ test('new gestures finish their configured loops before their interaction expire
   }
 });
 
-test('every generated asset has six frames with a stable canvas and provenance', () => {
+test('every sprite asset has six frames with a stable canvas and original generation provenance', () => {
   const manifest = JSON.parse(readFileSync(new URL('../public/pet-art/v2/manifest.json', import.meta.url)));
   assert.deepEqual(manifest.frameSize, [FRAME_WIDTH, FRAME_HEIGHT]);
   for (const [name, animation] of Object.entries(animations)) {
-    const file = readFileSync(new URL(`../public/pet-art/v2/${name}.png`, import.meta.url));
+    const filename = animation.file || `${name}.png`;
+    const file = readFileSync(new URL(`../public/pet-art/v2/${filename}`, import.meta.url));
     assert.equal(file.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
     assert.equal(file.readUInt32BE(16), FRAME_WIDTH * 6);
     assert.equal(file.readUInt32BE(20), FRAME_HEIGHT);
     assert.equal(file[25], 6, `${name} must preserve RGBA transparency`);
     assert.deepEqual(manifest.animations[name].durations, animation.durations);
+    assert.equal(manifest.animations[name].file, filename);
     assert.equal(manifest.animations[name].generation.tool, 'native image_generation');
     assert.ok(manifest.animations[name].generation.generationId);
     for (const bounds of manifest.animations[name].frameBounds) {
       assert.ok(bounds[0] >= 2 && bounds[1] >= 2 && bounds[2] < FRAME_WIDTH - 2 && bounds[3] < FRAME_HEIGHT - 2);
     }
   }
+});
+
+test('refined rest keeps its original strip and records the local redraw honestly', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../public/pet-art/v2/manifest.json', import.meta.url)));
+  const rest = manifest.animations.rest;
+  assert.equal(rest.refinement.source, 'rest.png');
+  assert.match(rest.refinement.method, /not a new AI generation/);
+  assert.equal(readFileSync(new URL('../public/pet-art/v2/rest.png', import.meta.url)).readUInt32BE(16), 1536);
+  assert.ok(animations.rest.durations.reduce((total, value) => total + value, 0) >= 6000);
+  assert.equal(frameAt(animations.rest, 0, false), 2);
 });

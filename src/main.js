@@ -150,6 +150,7 @@ function insightsView(c) {
 function workControls(c) {
   const record = activeRecord(store.data.records);
   const onBreak = record?.segments.at(-1)?.kind === 'break';
+  const overtime = record?.segments.at(-1)?.kind === 'overtime' || record?.segments.at(-1)?.resumeKind === 'overtime';
   const mode = record ? 'actual' : settings.trackingMode;
   const start = c.isWorkday && Date.now() < c.endAt;
   return `<div class="mode-control" role="group" aria-label="计薪模式">
@@ -157,7 +158,7 @@ function workControls(c) {
     <button type="button" data-tracking="actual" aria-pressed="${mode === 'actual'}" ${record ? 'disabled' : ''}>实际打卡</button>
     </div><span class="record-date">${c.mode === 'actual' ? `班次 ${c.key}` : c.isWorkday ? '计划工作日' : '休息日'}</span>
     <div class="session-actions">${record
-      ? `<button class="outline-button" data-work-action="${onBreak ? 'resume' : 'break'}">${icon(onBreak ? 'play' : 'coffee')} ${onBreak ? '继续工作' : '临时休息'}</button><button class="session-end outline-button" data-work-action="end">${icon('square')} 结束工作</button>`
+      ? `<button class="outline-button" data-work-action="${onBreak ? 'resume' : 'break'}">${icon(onBreak ? 'play' : 'coffee')} ${onBreak ? '继续工作' : '临时休息'}</button><button type="button" class="session-end outline-button" data-work-action="end">${icon('square')} ${overtime ? '结束加班' : '提前下班'}</button>`
       : mode === 'actual' ? `<button class="save-button" data-work-action="${start ? 'start' : 'overtime'}">${icon('play')} ${start ? '开始工作' : '开始加班'}</button>` : ''}</div>`;
 }
 function selectedHistory() {
@@ -275,7 +276,7 @@ function openDrawer(kind = 'settings') {
   drawerBaseline = structuredClone(settings);
   const drawer = document.getElementById('drawer'), overlay = document.getElementById('overlay');
   drawer.inert = false;
-  drawer.innerHTML = kind === 'help' ? `<div class="drawer-header"><div><span>帮助</span><h2>计算说明</h2></div><button class="icon-button close-drawer" aria-label="关闭">${icon('x')}</button></div><div class="drawer-body help-body"><h3>秒薪怎么算？</h3><p>日薪 ÷ 每日有薪秒数。仅无薪计划休息会从有薪时间中扣除；有薪休息继续计薪。</p><h3>估算与实际记录</h3><p>作息估算按照计划时间计算，不会进入工作记录。实际记录按打卡时间累计，普通班次到计划下班时自动结束；只有主动开始的加班才会累计。每个班次沿用首次打卡时的薪资与作息。</p><h3>无薪时长是什么？</h3><p>包含计划上班前的提前工作和未开启加班计薪的已记录加班。计划无薪休息、临时休息不算工作，也不算无薪加班。</p><h3>跨午夜的班次</h3><p>下班时间早于上班时间时，下班归于次日，记录归属上班日期。普通班次自动结束；跨日加班需要主动结束。</p><h3>暂停展示</h3><p>只冻结画面，不结束打卡或暂停计薪。结束实际工作请使用“结束工作”。数据仅保存在当前设备；配置备份不包含工作记录。</p><div class="help-note">金额仅供参考，以劳动合同和发薪记录为准。</div></div>` : settingsForm();
+  drawer.innerHTML = kind === 'help' ? `<div class="drawer-header"><div><span>帮助</span><h2>计算说明</h2></div><button class="icon-button close-drawer" aria-label="关闭">${icon('x')}</button></div><div class="drawer-body help-body"><h3>秒薪怎么算？</h3><p>日薪 ÷ 每日有薪秒数。仅无薪计划休息会从有薪时间中扣除；有薪休息继续计薪。</p><h3>估算与实际记录</h3><p>作息估算按照计划时间计算，不会进入工作记录。实际记录按打卡时间累计，普通班次到计划下班时自动结束；只有主动开始的加班才会累计。每个班次沿用首次打卡时的薪资与作息。</p><h3>无薪时长是什么？</h3><p>包含计划上班前的提前工作和未开启加班计薪的已记录加班。计划无薪休息、临时休息不算工作，也不算无薪加班。</p><h3>跨午夜的班次</h3><p>下班时间早于上班时间时，下班归于次日，记录归属上班日期。普通班次自动结束；跨日加班需要主动结束。</p><h3>暂停展示</h3><p>只冻结画面，不结束打卡或暂停计薪。提前下班或结束加班请在工作台确认操作；临时离开请使用“临时休息”。数据仅保存在当前设备；配置备份不包含工作记录。</p><div class="help-note">金额仅供参考，以劳动合同和发薪记录为准。</div></div>` : settingsForm();
   drawer.querySelector('.close-drawer').insertAdjacentHTML('beforebegin', widgetButton());
   overlay.hidden = false; requestAnimationFrame(() => { overlay.classList.add('visible'); drawer.classList.add('open'); drawer.querySelector('.close-drawer').focus(); }); drawer.setAttribute('aria-hidden', 'false'); refreshIcons();
   drawer.querySelector('[data-return-widget]').onclick = returnToWidget;
@@ -426,7 +427,21 @@ function bind() {
 }
 document.addEventListener('click', event => {
   const work = event.target.closest('[data-work-action]');
-  if (work) attempt(async () => { await store.dispatch({ type: 'work', action: work.dataset.workAction }); toast(({ start: '工作记录已开始', overtime: '加班记录已开始', break: '已开始临时无薪休息', resume: '已继续工作', end: '工作已结束，记录已保存' })[work.dataset.workAction]); });
+  if (work && !work.disabled) attempt(async () => {
+    const action = work.dataset.workAction;
+    let expectedRecordId;
+    if (action === 'end') {
+      const record = activeRecord(store.data.records);
+      const last = record?.segments.at(-1);
+      if (!last) return;
+      expectedRecordId = record.id;
+      const overtime = last.kind === 'overtime' || last.resumeKind === 'overtime';
+      const message = overtime ? '确认结束本次加班？' : '确认提前下班？正常班次会在计划下班时间自动结束。';
+      if (!confirm(`${message}\n结束后将停止计薪并保存当前记录；临时离开请使用“临时休息”。`)) return;
+    }
+    await store.dispatch({ type: 'work', action, ...(expectedRecordId ? { expectedRecordId } : {}) });
+    toast(({ start: '工作记录已开始', overtime: '加班记录已开始', break: '已开始临时无薪休息', resume: '已继续工作', end: '工作已结束，记录已保存' })[action]);
+  });
   const mode = event.target.closest('[data-tracking]');
   if (mode && !mode.disabled) attempt(() => patchSettings({ trackingMode: mode.dataset.tracking }));
   const range = event.target.closest('[data-history-range]');

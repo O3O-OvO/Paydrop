@@ -5,7 +5,7 @@ export const animations = {
   walk: { durations: [120, 120, 120, 120, 120, 120], poster: 0 },
   happy: { durations: [100, 120, 130, 170, 100, 130], poster: 0, loops: 2 },
   eat: { durations: [260, 180, 190, 260, 260, 260], poster: 0, loops: 2 },
-  rest: { durations: [700, 500, 600, 800, 400, 500], poster: 2 },
+  rest: { file: 'rest-soft.png', durations: [1100, 900, 1000, 1100, 900, 1100], poster: 2 },
   wave: { durations: [240, 160, 220, 220, 220, 260], poster: 0, loops: 2 },
   stretch: { durations: [250, 350, 450, 600, 300, 250], poster: 0, loops: 1 },
   dance: { durations: [180, 180, 180, 200, 180, 180], poster: 0, loops: 2 },
@@ -39,7 +39,7 @@ export function createSpritePlayer(canvas) {
   let fallback, lastDraw = '', started = 0, current = '';
   canvas.width = FRAME_WIDTH; canvas.height = FRAME_HEIGHT;
   const jobs = Object.keys(animations).map(async name => {
-    const image = await loadImage(`./pet-art/v2/${name}.png`);
+    const image = await loadImage(`./pet-art/v2/${animations[name].file || `${name}.png`}`);
     if (image.naturalWidth !== FRAME_WIDTH * 6 || image.naturalHeight !== FRAME_HEIGHT) throw new Error(`桌宠帧尺寸无效：${name}`);
     images.set(name, image);
   });

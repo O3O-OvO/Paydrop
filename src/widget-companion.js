@@ -1,5 +1,5 @@
 import { createSpritePlayer } from './pet-sprites.js';
-import { moodLabels } from './pet-behavior.js';
+import { moodLabels, restMessage } from './pet-behavior.js';
 import { WidgetCompanionBehavior } from './widget-companion-state.js';
 
 export const companionActions = [
@@ -22,7 +22,7 @@ export function companionMarkup() {
       <p class="widget-companion-message" id="widget-companion-message">今天也陪着你。</p>
       <div class="widget-companion-actions" role="toolbar" aria-label="小八互动">
         ${companionActions.map(item => `<button type="button" data-companion-action="${item.name}" title="${item.label}" aria-label="${item.label}"><i data-lucide="${item.icon}"></i></button>`).join('')}
-        <button type="button" data-companion-action="rest" title="小八休息 / 继续陪伴" aria-label="小八休息 / 继续陪伴" aria-pressed="false"><i data-lucide="coffee"></i></button>
+        <button type="button" data-companion-action="rest" title="让小八歇一会（不暂停计薪）" aria-label="小八休息 / 继续陪伴" aria-pressed="false"><i data-lucide="coffee"></i></button>
       </div>
     </div>
   </section>`;
@@ -43,11 +43,12 @@ export function mountWidgetCompanion(host, openPet) {
     if (mood !== previousMood) {
       previousMood = mood;
       host.dataset.mood = mood;
-      state.textContent = preferences.paused ? '已暂停' : moodLabels[mood];
+      state.textContent = preferences.paused ? '展示暂停' : moodLabels[mood];
+      host.querySelector('canvas').setAttribute('aria-label', `${moodLabels[mood]}的小八`);
     }
     if (now >= speakingUntil) {
       const text = preferences.paused ? '陪你安静待一会儿。'
-        : mood === 'rest' ? '歇一会儿，也记得照顾自己。' : '今天也陪着你。';
+        : mood === 'rest' ? restMessage(brain.previous?.state, brain.resting) : '今天也陪着你。';
       if (message.textContent !== text) message.textContent = text;
     }
     player.render(now, mood, preferences.motion && !preferences.paused);
@@ -66,6 +67,10 @@ export function mountWidgetCompanion(host, openPet) {
     if (value && frame === null && !stopped) frame = requestAnimationFrame(animate);
   }
 
+  function canAnimate() {
+    return preferences.enabled && preferences.motion && !preferences.paused && !document.hidden;
+  }
+
   function onClick(event) {
     if (event.target.closest('#widget-companion-popout')) { openPet(); return; }
     if (preferences.paused) return;
@@ -74,25 +79,30 @@ export function mountWidgetCompanion(host, openPet) {
       brain.react('happy', performance.now()); speak('嘿嘿，摸摸好开心。');
     }
     const button = event.target.closest('[data-companion-action]');
-    if (!button) return;
+    if (!button) { draw(performance.now()); return; }
     if (button.dataset.companionAction === 'rest') {
       brain.toggleRest();
       restButton.setAttribute('aria-pressed', String(brain.resting));
+      restButton.title = brain.resting ? '让小八继续陪伴（不改变计薪）' : '让小八歇一会（不暂停计薪）';
       speak(brain.resting ? '让我歇一会儿。' : '休息好了，继续陪着你。');
     } else {
       const action = companionActions.find(item => item.name === button.dataset.companionAction);
       if (action) { player.restart(); brain.react(action.name, performance.now()); speak(action.message); }
     }
+    draw(performance.now());
   }
 
   host.addEventListener('click', onClick);
-  const onVisibility = () => setActive(preferences.enabled && !document.hidden);
+  const onVisibility = () => {
+    setActive(canAnimate());
+    if (preferences.enabled && !document.hidden) draw(performance.now());
+  };
   document.addEventListener('visibilitychange', onVisibility);
   player.ready.then(({ errors }) => {
     if (!stopped && errors.length) {
       message.textContent = '部分动作暂不可用。'; speakingUntil = Infinity;
       console.warn(errors.join('\n'));
-    }
+    } else if (!stopped && preferences.enabled && !document.hidden) draw(performance.now());
   });
 
   return {
@@ -103,8 +113,8 @@ export function mountWidgetCompanion(host, openPet) {
       host.hidden = !value.enabled;
       host.querySelectorAll('[data-companion-action], #widget-companion-figure').forEach(button => { button.disabled = value.paused; });
       if (changed) { previousMood = ''; speakingUntil = 0; }
-      setActive(value.enabled && !document.hidden);
-      if (active) draw(performance.now());
+      setActive(canAnimate());
+      if (value.enabled && !document.hidden) draw(performance.now());
     },
     collectCoin() { brain.collectCoin(performance.now()); },
     destroy() {

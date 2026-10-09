@@ -16,7 +16,7 @@ export class WidgetCompanionBehavior {
       return;
     }
     if (!previous || previous.key !== result.key || previous.state === result.state ||
-        !preferences.followWork || !preferences.motion) return;
+        !preferences.followWork || !preferences.motion || this.brain.resting) return;
     if (/休息/.test(result.state)) this.brain.react('stretch', now);
     else if (/下班|已结束/.test(result.state)) this.brain.react('dance', now);
     else if (workMood(previous.state, true) === 'rest' && workMood(result.state, true) === 'idle') {
@@ -30,7 +30,9 @@ export class WidgetCompanionBehavior {
   }
 
   collectCoin(now) {
-    if (!this.preferences.motion || this.brain.interaction?.until > now) return;
+    if (!this.preferences.motion || this.brain.resting ||
+        workMood(this.previous?.state, this.preferences.followWork) === 'rest' ||
+        this.brain.interaction?.until > now) return;
     this.react('coin', now);
   }
 

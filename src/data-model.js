@@ -36,6 +36,9 @@ export function applyOperation(current, operation, now = new Date()) {
     if (activeRecord(current.records) && settings.trackingMode !== current.settings.trackingMode) throw new Error('请先结束当前记录，再切换计薪模式。');
     next.settings = settings;
   } else if (operation.type === 'work') {
+    if (operation.expectedRecordId !== undefined && activeRecord(advanceRecords(current.records, now).records)?.id !== operation.expectedRecordId) {
+      throw new Error('当前班次已变化，请重新确认操作。');
+    }
     next.records = workAction(current.records, current.settings, operation.action, now);
   } else if (operation.type === 'advance') {
     const advanced = advanceRecords(current.records, now);

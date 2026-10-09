@@ -2,7 +2,7 @@ import { createIcons, Heart, Cookie, Coffee, Play, Pause, X, PawPrint, Settings2
 import './pet.css';
 import { store } from './client-store.js';
 import { currentCalculation } from './work-log.js';
-import { PetBehavior, moodLabels, stepWithin } from './pet-behavior.js';
+import { PetBehavior, moodLabels, restMessage, stepWithin } from './pet-behavior.js';
 import { createSpritePlayer } from './pet-sprites.js';
 
 const desktop = window.paydropDesktop;
@@ -158,7 +158,7 @@ function frame(now) {
   if (next !== mood) {
     mood = next; pet.dataset.mood = next;
     if (!native) document.getElementById('pet-status').textContent = hidden ? '已收起' : moodLabels[next];
-    if (next === 'rest' && now > bubbleUntil) speak('歇一会儿，我陪着你。', 2300);
+    if (next === 'rest' && now > bubbleUntil) speak(restMessage(calculation.state, brain.resting), 2300);
   }
   syncActivity(next);
   spritePlayer.render(now, next, motionEnabled() && !hidden);
@@ -196,8 +196,11 @@ function interact(name) {
   if (name === 'feed') { brain.react('eat', performance.now()); speak('是吐司！谢谢你，好好吃。', 3500); }
   if (name === 'rest') {
     brain.toggleRest();
-    document.querySelectorAll('[data-action="rest"]').forEach(button => button.setAttribute('aria-pressed', String(brain.resting)));
-    speak(brain.resting ? '一起歇一会儿吧。' : '休息好啦，继续陪着你！');
+    document.querySelectorAll('[data-action="rest"]').forEach(button => {
+      button.setAttribute('aria-pressed', String(brain.resting));
+      button.title = brain.resting ? '让小八继续陪伴（不改变计薪）' : '让小八歇一会（不暂停计薪）';
+    });
+    speak(brain.resting ? restMessage(calculation.state, true) : '休息好啦，继续陪着你！');
   }
   if (name === 'roam') patch({ petRoam: !settings.petRoam });
   if (name === 'reset') { placedByUser = false; place(true); speak('我回到这里啦。'); }

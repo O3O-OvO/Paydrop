@@ -74,3 +74,31 @@ test('manual rest persists across work updates while gestures remain temporary',
   brain.toggleRest();
   assert.equal(brain.mood(4100), 'idle');
 });
+
+test('automatic coins and schedule gestures cannot wake a manually resting companion', () => {
+  const brain = new WidgetCompanionBehavior();
+  brain.sync(result('工作中'), preferences, 0);
+  brain.toggleRest();
+  brain.collectCoin(100);
+  assert.equal(brain.mood(100), 'rest');
+  brain.sync(result('临时休息'), preferences, 200);
+  assert.equal(brain.mood(200), 'rest');
+  brain.sync(result('工作中'), preferences, 300);
+  assert.equal(brain.mood(300), 'rest');
+  brain.sync(result('已下班'), preferences, 400);
+  assert.equal(brain.mood(400), 'rest');
+  brain.react('eat', 500);
+  assert.equal(brain.mood(500), 'eat');
+  assert.equal(brain.mood(4100), 'rest');
+});
+
+test('a companion following planned rest does not celebrate money earned during a paid break', () => {
+  const brain = new WidgetCompanionBehavior();
+  brain.sync(result('休息中'), preferences, 0);
+  brain.collectCoin(100);
+  assert.equal(brain.mood(100), 'rest');
+  brain.sync(result('工作中'), preferences, 200);
+  assert.equal(brain.mood(200), 'wave');
+  brain.collectCoin(3500);
+  assert.equal(brain.mood(3500), 'coin');
+});

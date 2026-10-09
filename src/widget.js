@@ -1,4 +1,4 @@
-import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, Square, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw } from 'lucide';
+import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw } from 'lucide';
 import './widget.css';
 import './widget-themes.css';
 import './widget-opacity.css';
@@ -15,7 +15,7 @@ import { activeRecord, currentCalculation } from './work-log.js';
 import { companionMarkup, mountWidgetCompanion } from './widget-companion.js';
 import { clampWidgetScale, scaleAfterDrag, MIN_WIDGET_SCALE, MAX_WIDGET_SCALE } from './widget-sizing.js';
 
-const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, Square, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw };
+const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw };
 const themes = ['minimal', 'night', 'hachiware'];
 let settings = (await store.init()).settings;
 let previousTier = null;
@@ -220,7 +220,7 @@ function showUpdateState() {
 function tick(allowCoin = true) {
   const result = data(paused ? frozenAt : new Date());
   const update = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-  update('widget-state', paused ? '已暂停' : result.state);
+  update('widget-state', paused ? '展示暂停' : result.state);
   const earnedText = money(result.earned, settings.amountPrecision);
   const motion = !paused && settings.motion && !reducedMotion.matches;
   companion?.sync(result, { enabled: settings.widgetPetEnabled, paused, motion, followWork: settings.petFollowWork });
@@ -250,8 +250,8 @@ function tick(allowCoin = true) {
     const start = result.isWorkday && Date.now() < result.endAt;
     session.dataset.signature = signature;
     session.innerHTML = `<span>${result.key}</span><div>${record
-      ? `<button data-widget-work="${last.kind === 'break' ? 'resume' : 'break'}" title="${last.kind === 'break' ? '继续工作' : '临时无薪休息'}" aria-label="${last.kind === 'break' ? '继续工作' : '临时无薪休息'}">${icon(last.kind === 'break' ? 'play' : 'coffee')}</button><button data-widget-work="end" title="结束工作并保存记录" aria-label="结束工作">${icon('square')}</button>`
-      : settings.trackingMode === 'actual' ? `<button data-widget-work="${start ? 'start' : 'overtime'}" title="${start ? '开始工作记录' : '开始加班记录'}" aria-label="${start ? '开始工作' : '开始加班'}">${icon('play')}</button>`
+      ? `<button class="widget-work-command" data-widget-work="${last.kind === 'break' ? 'resume' : 'break'}" title="${last.kind === 'break' ? '继续工作记录' : '临时无薪休息，停止本次休息期间计薪'}" aria-label="${last.kind === 'break' ? '继续工作' : '临时无薪休息'}">${icon(last.kind === 'break' ? 'play' : 'coffee')}<span>${last.kind === 'break' ? '继续工作' : '临时休息'}</span></button>`
+      : settings.trackingMode === 'actual' ? `<button class="widget-work-command" data-widget-work="${start ? 'start' : 'overtime'}" title="${start ? '开始工作记录' : '开始加班记录'}" aria-label="${start ? '开始工作' : '开始加班'}">${icon('play')}<span>${start ? '开始工作' : '开始加班'}</span></button>`
         : `<button id="widget-actual" title="切换到实际打卡" aria-label="切换到实际打卡">${icon('clipboard-check')}</button>`}</div>`;
     createIcons({ icons });
   }
@@ -266,7 +266,7 @@ function spawnWidgetCoin() {
 store.subscribe(value => { settings = value.settings; applyTheme(); previousTier = null; tick(false); });
 document.addEventListener('click', event => {
   const work = event.target.closest('[data-widget-work]');
-  if (work) attempt(() => store.dispatch({ type: 'work', action: work.dataset.widgetWork }));
+  if (work && ['start', 'overtime', 'break', 'resume'].includes(work.dataset.widgetWork)) attempt(() => store.dispatch({ type: 'work', action: work.dataset.widgetWork }));
   if (event.target.closest('#widget-actual')) attempt(() => store.dispatch({ type: 'settings', patch: { trackingMode: 'actual' } }));
 });
 document.addEventListener('pointerdown', event => {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { PetBehavior, stepWithin, workMood, reactionDurations } from './pet-behavior.js';
+import { PetBehavior, stepWithin, workMood, reactionDurations, restMessage } from './pet-behavior.js';
 import { defaults, normalizeSettings, validatePatch, settingsError } from './settings.js';
 import { normalizeData } from './data-model.js';
 
@@ -10,6 +10,15 @@ test('pet follows work breaks but does not change salary settings', () => {
   assert.equal(workMood('待打卡', true), 'rest');
   assert.equal(workMood('工作中', true), 'idle');
   assert.equal(workMood('休息中', false), 'idle');
+});
+
+test('rest captions distinguish manual pet rest from check-in and schedule states', () => {
+  assert.equal(restMessage('工作中', true), '你忙你的，我歇一会儿。');
+  assert.equal(restMessage('已下班'), '收工啦，今天辛苦了。');
+  assert.equal(restMessage('待打卡'), '等你开工，我先歇会儿。');
+  assert.equal(restMessage('临时休息'), '休息时间到啦，一起放松。');
+  assert.equal(restMessage('休息中'), '休息时间到啦，一起放松。');
+  assert.equal(restMessage('已下班', true), '你忙你的，我歇一会儿。');
 });
 
 test('roaming is bounded in time and pauses on hover or reduced motion', () => {

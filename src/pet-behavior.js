@@ -1,5 +1,5 @@
 export const moodLabels = {
-  idle: '陪伴中', walk: '散步中', rest: '休息中',
+  idle: '陪伴中', walk: '散步中', rest: '歇一会',
   happy: '好开心', eat: '吃点心', drag: '被抱起来了',
   wave: '打个招呼', stretch: '伸个懒腰', dance: '开心摇摆', coin: '抱抱金币',
 };
@@ -10,6 +10,14 @@ export const reactionDurations = {
 
 export function workMood(state, followWork) {
   return followWork && /休息|下班|未开工|未打卡|待打卡|已结束/.test(state || '') ? 'rest' : 'idle';
+}
+
+export function restMessage(state, manual = false) {
+  if (manual) return '你忙你的，我歇一会儿。';
+  if (/下班|已结束/.test(state || '')) return '收工啦，今天辛苦了。';
+  if (/未开工|未打卡|待打卡/.test(state || '')) return '等你开工，我先歇会儿。';
+  if (/休息/.test(state || '')) return '休息时间到啦，一起放松。';
+  return '歇一会儿，也照顾一下自己。';
 }
 
 export function stepWithin(position, direction, distance, minimum, maximum) {

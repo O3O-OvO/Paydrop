@@ -5,6 +5,8 @@
 .widget-session > div { display: flex; gap: 7px; }
 .widget-session button { display: grid; place-items: center; width: 27px; height: 26px; border: 1px solid currentColor; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
 .widget-session button:hover { background: #89bbb433; }
+.widget-session .widget-work-command { display: flex; gap: 5px; width: 84px; padding: 0 7px; justify-content: center; font-size: 10px; white-space: nowrap; }
+.widget-session button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .widget-session svg { width: 13px; height: 13px; }
 .widget-toast { position: absolute; left: 15px; right: 15px; bottom: 37px; z-index: 20; padding: 10px; border-radius: 5px; background: #263e46; color: #fff; font-size: 11px; line-height: 1.5; }
 .widget-toast[hidden],.window-actions button[hidden] { display: none; }

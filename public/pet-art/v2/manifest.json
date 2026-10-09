@@ -251,15 +251,15 @@
       ]
     },
     "rest": {
-      "file": "rest.png",
+      "file": "rest-soft.png",
       "frames": 6,
       "durations": [
-        700,
-        500,
-        600,
-        800,
-        400,
-        500
+        1100,
+        900,
+        1000,
+        1100,
+        900,
+        1100
       ],
       "sourceSize": [
         1536,
@@ -309,7 +309,25 @@
           237,
           274
         ]
-      ]
+      ],
+      "refinement": {
+        "method": "local facial redraw using Pillow; not a new AI generation",
+        "source": "rest.png",
+        "sourceSha256": "7ddc83562ff66209d20cc8c95c98b24982d20b4554c1809e6a42b177dde3f9f0",
+        "script": "scripts/refine-rest-art.py",
+        "changes": [
+          "relaxed closed eyelids",
+          "small peaceful smile",
+          "removed tired eyebrows and lower lip"
+        ],
+        "invariants": [
+          "original body poses",
+          "alpha silhouette",
+          "seat baseline",
+          "blue markings",
+          "pink cheeks"
+        ]
+      }
     },
     "wave": {
       "file": "wave.png",
