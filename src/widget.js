@@ -8,9 +8,12 @@ import './widget-session.css';
 import './widget-companion.css';
 import './widget-sizing.css';
 import './widget-density.css';
+import './widget-refinement.css';
 import { updateDigits } from './digit-motion.js';
 import { updateCountedAmount } from './amount-counter.js';
-import { store } from './client-store.js';
+import { store as persistentStore } from './client-store.js';
+import { createPreviewStore } from './widget-preview.js';
+import { needsSetup, shiftExperience } from './experience-state.js';
 import { defaults } from './settings.js';
 import { activeRecord, currentCalculation } from './work-log.js';
 import { workPresentation, overtimeReminder } from './work-status.js';
@@ -19,6 +22,8 @@ import { clampWidgetScale, scaleAfterDrag, widgetHeight, MIN_WIDGET_SCALE, MAX_W
 
 const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert, Eye, Moon };
 const themes = ['minimal', 'night', 'hachiware'];
+const isPreview = new URLSearchParams(window.location.search).get('preview') === '1' && window.parent !== window;
+const store = isPreview ? createPreviewStore() : persistentStore;
 let settings = (await store.init()).settings;
 let previousTier = null;
 let paused = false;
@@ -41,7 +46,13 @@ async function attempt(task) {
 function pad(value) { return String(value).padStart(2, '0'); }
 function duration(value) { const total = Math.max(0, Math.floor(value)); return `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total % 3600 / 60))}:${pad(total % 60)}`; }
 function money(value, digits = 4) { return value.toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits }); }
-function data(now = new Date()) { return currentCalculation(settings, store.data.records, now); }
+function data(now = new Date()) { return isPreview
+  ? currentCalculation({ ...settings, trackingMode: 'estimate', workCalendar: 'weekly', exceptions: [], workdays: [1, 2, 3, 4, 5] }, [], new Date(2026, 9, 9, 14, 30))
+  : currentCalculation(settings, store.data.records, now); }
+function openDashboard() {
+  if (window.paydropDesktop) window.paydropDesktop.openDashboard();
+  else window.location.href = new URL('./index.html?settings=1', window.location.href).href;
+}
 function coinTier(earned, daily) {
   const progress = Math.max(0, earned / daily);
   return progress >= 1 ? 5 : Math.min(4, Math.floor(progress * 5));
@@ -173,13 +184,21 @@ function togglePause() {
 function render() {
   companion?.destroy();
   applyTheme();
+  if (needsSetup(store.data)) {
+    document.querySelector('#widget').innerHTML = `<section class="widget-card widget-setup"><header class="widget-header"><strong>薪动 PAYDROP</strong>${window.paydropDesktop ? `<div class="window-actions"><button id="setup-close" title="收起挂件" aria-label="收起挂件">${icon('x')}</button></div>` : ''}</header><img src="./hachiware-face.png" alt="" width="64" height="64"><h1>先确认计薪安排</h1><p>日薪与作息尚未配置</p><button type="button" id="widget-setup">设置日薪与作息</button></section>`;
+    document.getElementById('widget-setup').onclick = openDashboard;
+    const close = document.getElementById('setup-close');
+    if (close) close.onclick = () => window.paydropDesktop.close();
+    createIcons({ icons });
+    return;
+  }
   document.querySelector('#widget').innerHTML = `<section class="widget-card">
     <header class="widget-header"><div class="widget-brand"><span class="widget-brand-icon">${icon('coins')}<img src="./hachiware-face.png" alt="" /></span><strong>薪动</strong><span>PAYDROP</span></div><div class="window-actions"><button id="widget-update" title="重启安装更新" aria-label="重启安装更新" hidden>${icon('refresh-cw')}</button><button id="widget-theme" title="切换主题" aria-label="切换主题">${icon('palette')}</button><details class="widget-display-menu" id="widget-display-menu"><summary title="画面显示" aria-label="画面显示">${icon('eye')}</summary><div class="widget-display-options"><button id="widget-pause" title="冻结数字（不暂停打卡或计薪）" aria-label="冻结数字（不暂停打卡或计薪）" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')}<span>${paused ? '恢复实时数字' : '冻结数字'}</span></button><span>打卡与计薪不受影响</span></div></details><button id="widget-settings" title="打开设置与详情" aria-label="打开设置与详情">${icon('settings-2')}</button><button id="widget-minimize" title="最小化" aria-label="最小化">${icon('minus')}</button><button id="widget-close" title="退出挂件" aria-label="退出挂件">${icon('x')}</button></div></header>
     <div class="widget-label"><span class="status-dot"></span><span id="widget-state">工作中</span><button type="button" id="widget-review" class="widget-review" aria-label="核对长时加班记录" hidden>${icon('circle-alert')}<span>核对加班</span></button><span class="widget-label-right">今日已赚取</span></div>
     <div class="widget-amount"><span>¥</span><strong id="widget-earned">0.0000</strong><div class="coin-display" id="coin-display" role="img" aria-label="今日金币积累"><div class="coin-pile" id="coin-pile"><span class="coin-piece coin-one"></span><span class="coin-piece coin-two"></span><span class="coin-piece coin-three"></span><span class="coin-piece coin-four"></span><span class="coin-piece coin-five"></span><span class="coin-piece coin-six"></span></div><div id="widget-coins" class="widget-coins"></div></div></div>
     <div class="widget-rate">${icon('trending-up')}<span id="widget-rate">¥0.0000 / 秒</span><span id="widget-rate-caption" class="rate-caption">实时计薪</span><button type="button" id="widget-unfreeze" hidden title="数字已冻结，打卡状态未改变；点击恢复实时">数字已冻结 ${icon('play')}</button></div>
-    <div class="widget-progress"><span id="widget-progress-fill"></span></div>
-    <div class="widget-metrics"><div>${icon('timer')}<span id="widget-time-label">距计划下班</span><strong id="widget-remaining">00:00:00</strong></div><div>${icon('clock-3')}<span>已工作</span><strong id="widget-worked">00:00:00</strong></div><div>${icon('coffee')}<span>无偿时长</span><strong id="widget-unpaid">00:00:00</strong></div></div>
+    <div class="widget-progress-region"><div class="widget-progress-caption"><span>计划班次进度</span><span id="widget-progress-value"></span></div><div class="widget-progress" role="progressbar" aria-label="计划班次进度（非收入进度）" aria-valuemin="0" aria-valuemax="100"><span id="widget-progress-fill"></span></div></div>
+    <div class="widget-metrics"><div>${icon('timer')}<span id="widget-time-label">距计划下班</span><strong id="widget-remaining">00:00:00</strong></div><div>${icon('clock-3')}<span>已工作</span><strong id="widget-worked">00:00:00</strong></div><div>${icon('coffee')}<span id="widget-rest-label">无偿时长</span><strong id="widget-unpaid">00:00:00</strong></div></div>
     ${companionMarkup()}
     <footer id="widget-session" class="widget-session"></footer>
     <button type="button" class="widget-size-toggle" id="widget-size-toggle" title="调整挂件大小" aria-label="调整挂件大小" aria-expanded="false" aria-controls="widget-size-panel">${icon('scaling')}<span id="widget-size-value">${settings.widgetScale}%</span></button>
@@ -208,10 +227,7 @@ function render() {
   document.querySelector('#widget-theme').onclick = () => attempt(cycleTheme);
   document.querySelector('#widget-pause').onclick = togglePause;
   document.querySelector('#widget-unfreeze').onclick = () => { if (paused) togglePause(); };
-  document.querySelector('#widget-settings').onclick = () => {
-    if (window.paydropDesktop) window.paydropDesktop.openDashboard();
-    else window.location.href = new URL('./index.html?settings=1', window.location.href).href;
-  };
+  document.querySelector('#widget-settings').onclick = openDashboard;
   document.getElementById('widget-review').onclick = () => {
     const record = activeRecord(store.data.records);
     if (!record) return;
@@ -234,6 +250,7 @@ function render() {
   document.querySelector('#widget-update').onclick = () => window.paydropDesktop?.installUpdate();
   showUpdateState();
   tick();
+  if (isPreview) document.querySelector('#widget').inert = true;
 }
 function showUpdateState() {
   const button = document.getElementById('widget-update');
@@ -242,11 +259,13 @@ function showUpdateState() {
   if (!button.hidden) button.title = `版本 ${updateState.availableVersion} 已就绪，重启安装更新`;
 }
 function tick(allowCoin = true) {
+  if (needsSetup(store.data)) return;
   const result = data(paused ? frozenAt : new Date());
   const live = paused ? data() : result;
   const presentation = workPresentation(live);
+  const experience = shiftExperience(live);
   const update = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-  update('widget-state', live.state);
+  update('widget-state', experience.historical ? '旧班次待核对' : live.state);
   const calendarLabel = document.querySelector('.widget-label-right');
   calendarLabel.textContent = ['official', 'manual'].includes(live.calendarDay.source) ? live.calendarDay.label : result.mode === 'actual' ? '本班已记录' : '今日预计收入';
   calendarLabel.title = `${live.key} · ${live.calendarDay.label}${live.calendarDay.source === 'fallback' ? ' · 该年官方日历未收录' : ''}`;
@@ -262,12 +281,19 @@ function tick(allowCoin = true) {
   update('widget-rate-caption', result.mode === 'actual' ? '实际记录' : '作息估算');
   document.getElementById('widget-rate-caption').hidden = paused;
   document.getElementById('widget-unfreeze').hidden = !paused;
-  update('widget-time-label', presentation.timerLabel);
-  document.getElementById('widget-remaining').title = presentation.timerCaption;
-  updateDigits(document.getElementById('widget-remaining'), duration(workPresentation(result).timerSeconds), motion, presentation.timerDirection);
+  const compactRest = settings.widgetDensity === 'compact' && experience.resting;
+  update('widget-time-label', compactRest ? experience.restLabel : presentation.timerLabel);
+  document.getElementById('widget-remaining').title = compactRest ? experience.restCaption : presentation.timerCaption;
+  updateDigits(document.getElementById('widget-remaining'), duration(compactRest ? result.restSeconds : workPresentation(result).timerSeconds), motion, compactRest ? 'up' : presentation.timerDirection);
   updateDigits(document.getElementById('widget-worked'), duration(result.worked), motion);
-  updateDigits(document.getElementById('widget-unpaid'), duration(result.unpaid), motion);
-  document.getElementById('widget-progress-fill').style.width = `${result.progress}%`;
+  update('widget-rest-label', experience.resting ? experience.restLabel : '无偿时长');
+  document.getElementById('widget-unpaid').title = experience.resting ? experience.restCaption : '含提前工作与无薪加班';
+  updateDigits(document.getElementById('widget-unpaid'), duration(experience.resting ? result.restSeconds : result.unpaid), motion);
+  const progress = shiftExperience(result);
+  document.querySelector('.widget-progress-region').hidden = !progress.showProgress;
+  document.getElementById('widget-progress-fill').style.width = `${progress.progress}%`;
+  document.querySelector('.widget-progress').setAttribute('aria-valuenow', Math.floor(progress.progress));
+  update('widget-progress-value', `${Math.floor(progress.progress)}%`);
   document.querySelector('.widget-card').dataset.state = live.state;
   const tier = coinTier(result.earned, result.daily);
   const pile = document.getElementById('coin-display');
@@ -280,8 +306,10 @@ function tick(allowCoin = true) {
   const record = activeRecord(store.data.records), last = record?.segments.at(-1);
   const reminder = overtimeReminder(record, settings);
   const review = document.getElementById('widget-review');
-  review.hidden = !reminder;
-  if (reminder) review.title = reminder.message;
+  review.hidden = !reminder && !experience.historical;
+  review.setAttribute('aria-label', experience.historical ? '核对历史班次' : '核对长时加班记录');
+  review.querySelector('span').textContent = experience.historical ? '核对记录' : '核对加班';
+  if (reminder || experience.historical) review.title = experience.historical ? `${live.key} 班次尚未结束，当前收入不是今日汇总` : reminder.message;
   const session = document.getElementById('widget-session');
   const signature = `${settings.trackingMode}|${record?.id}|${last?.kind}|${result.key}|${Date.now() >= result.endAt}`;
   if (session.dataset.signature !== signature) {
@@ -301,7 +329,11 @@ function spawnWidgetCoin() {
   document.getElementById('widget-coins').appendChild(coin);
   coin.addEventListener('animationend', () => coin.remove());
 }
-store.subscribe(value => { settings = value.settings; applyTheme(); previousTier = null; tick(false); });
+store.subscribe(value => {
+  settings = value.settings;
+  if (needsSetup(value) || document.getElementById('widget-setup')) { render(); return; }
+  applyTheme(); previousTier = null; tick(false);
+});
 document.addEventListener('click', event => {
   const work = event.target.closest('[data-widget-work]');
   if (work && ['start', 'overtime', 'break', 'resume'].includes(work.dataset.widgetWork)) attempt(async () => {
@@ -311,10 +343,12 @@ document.addEventListener('click', event => {
   if (event.target.closest('#widget-actual')) attempt(() => store.dispatch({ type: 'settings', patch: { trackingMode: 'actual' } }));
 });
 document.addEventListener('pointerdown', event => {
+  if (needsSetup(store.data)) return;
   if (!event.target.closest('#widget-size-panel, #widget-size-toggle')) toggleSizePanel(false);
   if (!event.target.closest('#widget-display-menu')) document.getElementById('widget-display-menu').open = false;
 });
 document.addEventListener('keydown', event => {
+  if (needsSetup(store.data)) return;
   if (event.key === 'Escape' && document.getElementById('widget-display-menu').open) {
     document.getElementById('widget-display-menu').open = false;
     document.querySelector('#widget-display-menu summary').focus();
@@ -324,18 +358,28 @@ document.addEventListener('keydown', event => {
   }
 });
 render();
+if (isPreview) {
+  document.body.dataset.preview = 'true';
+  window.addEventListener('message', event => {
+    const expectedOrigin = window.location.protocol === 'file:' ? 'null' : window.location.origin;
+    if (event.source !== window.parent || event.origin !== expectedOrigin || event.data?.type !== 'paydrop-appearance-preview') return;
+    void store.dispatch({ type: 'settings', patch: { ...event.data.settings, setupComplete: true, motion: false, sound: false } }).catch(() => {});
+  });
+}
 reducedMotion.addEventListener('change', () => tick(false));
 window.addEventListener('pagehide', event => { if (!event.persisted) companion?.destroy(); });
-window.paydropDesktop?.onUpdateStatus?.(state => { updateEvents += 1; updateState = state; showUpdateState(); });
-const initialUpdateEvents = updateEvents;
-window.paydropDesktop?.getUpdateState?.().then(state => {
-  if (updateEvents !== initialUpdateEvents) return;
-  updateState = state;
-  showUpdateState();
-});
+if (!isPreview) {
+  window.paydropDesktop?.onUpdateStatus?.(state => { updateEvents += 1; updateState = state; showUpdateState(); });
+  const initialUpdateEvents = updateEvents;
+  window.paydropDesktop?.getUpdateState?.().then(state => {
+    if (updateEvents !== initialUpdateEvents) return;
+    updateState = state;
+    showUpdateState();
+  });
+}
 setInterval(tick, 1000);
 setInterval(async () => {
-  if (advancing || !activeRecord(store.data.records)) return;
+  if (isPreview || advancing || !activeRecord(store.data.records)) return;
   advancing = true;
   try { await store.dispatch({ type: 'advance' }); } catch (error) { await attempt(() => { throw error; }); }
   finally { advancing = false; }

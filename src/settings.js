@@ -2,6 +2,7 @@ import { resolveBreaks, scheduleError } from './schedule.js';
 import { CHINA_CALENDAR } from './china-calendar.js';
 
 export const defaults = {
+  setupComplete: false,
   dailySalary: 545.45, start: '09:00', end: '18:00',
   breaks: [{ start: '12:00', end: '13:00' }],
   workdays: [1, 2, 3, 4, 5], exceptions: [], workCalendar: 'weekly',
@@ -18,6 +19,7 @@ export const defaults = {
 export function settingsError(value) {
   const error = scheduleError(value);
   if (error) return error;
+  if ('setupComplete' in value && typeof value.setupComplete !== 'boolean') return '首次配置状态无效。';
   if (value.breaks.length > 100 || value.breaks.some(item => item.paid !== undefined && typeof item.paid !== 'boolean')) return '休息时段数量或计薪类型无效。';
   if (!Array.isArray(value.workdays) || value.workdays.some(day => !Number.isInteger(day) || day < 0 || day > 6) || new Set(value.workdays).size !== value.workdays.length) return '工作日设置无效。';
   if (!Array.isArray(value.exceptions) || value.exceptions.length > 366 || value.exceptions.some(item => {
@@ -51,6 +53,8 @@ export function settingsError(value) {
 export function normalizeSettings(saved = {}) {
   if (!saved || typeof saved !== 'object' || Array.isArray(saved)) saved = {};
   const value = Object.fromEntries(Object.keys(defaults).map(key => [key, saved[key] ?? structuredClone(defaults[key])]));
+  // Existing installations already have a salary; only a genuinely new profile needs setup.
+  value.setupComplete = saved.setupComplete ?? Object.hasOwn(saved, 'dailySalary');
   value.breaks = resolveBreaks(saved, defaults.breaks);
   return settingsError(value) ? structuredClone(defaults) : value;
 }

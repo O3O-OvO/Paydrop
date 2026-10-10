@@ -96,13 +96,14 @@ export function calculateSchedule(settings, date = new Date(), options = {}) {
   const state = !shift.isWorkday ? '休息日' : current < start ? '未开工' : current < end
     ? (breaks.some(item => current >= item.from && current < item.to) ? '休息中' : '工作中')
     : options.overtime ? '加班中' : '已下班';
+  const currentRest = state === '休息中' ? breaks.find(item => current >= item.from && current < item.to) : null;
 
   return {
     current, start, end, breaks, breakTotal, breakElapsed, scheduled, rate, worked, overtime, unpaid,
     earned: (worked - overtime) * rate + (settings.paidOvertime ? overtime * rate * (settings.overtimeMultiplier || 1) : 0),
     remaining: shift.isWorkday ? Math.max(0, end - current) : 0,
     progress: shift.isWorkday ? Math.min(100, Math.max(0, elapsed / (end - start) * 100)) : 0,
-    state,
+    state, restSeconds: currentRest ? Math.max(0, Math.floor((date.getTime() - shift.at(currentRest.from)) / 1000)) : 0,
     daily: Number(settings.dailySalary),
     accrualRate: shift.isWorkday && current >= start && current < end && !breaks.some(item => !item.paid && current >= item.from && current < item.to) ? rate : 0,
     ...shift,

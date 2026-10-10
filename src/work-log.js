@@ -90,7 +90,11 @@ export function calculateRecord(record, date = new Date()) {
     : base.state === '休息中' ? '休息中' : '工作中';
   const accrualRate = record.finishedAt || last?.kind === 'break' ? 0 : last?.kind === 'overtime' ? (settings.paidOvertime ? base.rate * settings.overtimeMultiplier : 0)
     : date.getTime() >= base.startAt && date.getTime() < base.endAt && !base.breaks.some(rest => !rest.paid && date.getTime() >= base.at(rest.from) && date.getTime() < base.at(rest.to)) ? base.rate : 0;
-  return { ...base, remaining: record.finishedAt ? 0 : base.remaining, worked: Math.floor(worked), overtime: Math.floor(overtime), unpaid: Math.floor(unpaid), earned, accrualRate, overtimeActive: overtimeActive && !record.finishedAt, state, mode: 'actual', recordId: record.id };
+  const plannedRest = base.breaks.find(rest => date.getTime() >= base.at(rest.from) && date.getTime() < base.at(rest.to));
+  const restStart = state === '临时休息' ? last.start
+    : state === '休息中' && plannedRest ? Math.max(last.start, base.at(plannedRest.from)) : null;
+  const restSeconds = restStart === null ? 0 : Math.max(0, Math.floor((date.getTime() - restStart) / 1000));
+  return { ...base, remaining: record.finishedAt ? 0 : base.remaining, worked: Math.floor(worked), overtime: Math.floor(overtime), unpaid: Math.floor(unpaid), earned, accrualRate, restSeconds, overtimeActive: overtimeActive && !record.finishedAt, state, mode: 'actual', recordId: record.id };
 }
 
 export function currentCalculation(settings, records, date = new Date()) {

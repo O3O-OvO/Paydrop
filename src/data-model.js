@@ -85,7 +85,7 @@ export function applyOperation(current, operation, now = new Date()) {
     const input = operation.settings;
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('配置格式不正确。');
     const patch = Object.fromEntries(Object.entries(input).filter(([key]) => key in defaults));
-    next.settings = validatePatch(normalizeSettings(), patch);
+    next.settings = validatePatch(normalizeSettings(), { ...patch, setupComplete: patch.setupComplete ?? true });
     if (activeRecord(current.records)) throw new Error('请先结束当前记录，再导入配置。');
   } else throw new Error('未知操作。');
   if (!Number.isSafeInteger(current.revision) || current.revision >= Number.MAX_SAFE_INTEGER) throw new Error('数据版本计数异常，请先导出完整备份。');

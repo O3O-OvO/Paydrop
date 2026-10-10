@@ -8,6 +8,7 @@ import './evolution.css';
 import './record-tools.css';
 import './experience.css';
 import './calendar.css';
+import './experience-refinement.css';
 import { ChevronLeft } from 'lucide';
 import { CHINA_CALENDAR } from './china-calendar.js';
 import { calendarView, moveMonth, validMonth } from './calendar-view.js';
@@ -20,6 +21,9 @@ import { store } from './client-store.js';
 import { activeRecord, currentCalculation, summaries } from './work-log.js';
 import { workPresentation, hasPendingPaySettings, overtimeReminder, paySettingsRows } from './work-status.js';
 import { createRecordTools } from './record-panel.js';
+import { needsSetup, shiftExperience } from './experience-state.js';
+import { mountOnboarding } from './onboarding.js';
+import { mountAppearancePreview } from './appearance-preview.js';
 
 const icons = { LayoutDashboard, CalendarDays, Settings2, CircleHelp, ChevronDown, ChevronRight, Clock3, Wallet, Timer, Coffee, TrendingUp, ArrowUpRight, Pause, Play, Volume2, VolumeX, RotateCcw, X, Check, Coins, Info, Sparkles, Sun, Moon, Palette, PictureInPicture2, Plus, Trash2, Square, Download, Upload, History, Pin, PawPrint, CircleAlert };
 icons.ChevronLeft = ChevronLeft;
@@ -45,6 +49,8 @@ let reminderKey = '';
 let reminderSnoozedUntil = 0;
 let calendarSelected = dateKey(new Date());
 let calendarMonth = calendarSelected.slice(0, 7);
+let appearanceTheme;
+let disposePreview;
 
 async function patchSettings(patch, expected) {
   return store.dispatch({ type: 'settings', patch, expected });
@@ -93,6 +99,11 @@ function dateLabel(date) { return new Intl.DateTimeFormat('zh-CN', { month: 'lon
 function timeLabel(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`; }
 
 function render() {
+  disposePreview?.(); disposePreview = null;
+  if (needsSetup(store.data)) {
+    mountOnboarding(document.querySelector('#app'), settings, patchSettings, () => { render(); toast('计薪安排已保存'); });
+    return;
+  }
   const d = now(), c = calculate(d);
   document.querySelector('#app').innerHTML = `
     <div class="app-shell">
@@ -130,7 +141,9 @@ function render() {
 }
 function todayView(c, d) {
   const presentation = workPresentation(c);
-  return `<div class="page-heading today-heading"><div><div class="eyebrow"><span class="live-dot"></span><span id="live-state">${c.mode === 'actual' ? '实际记录' : '作息估算'} · ${c.state}</span></div><h1>今日概览</h1></div><button class="outline-button" id="quick-settings">${icon('settings-2')} 调整工作时间</button></div>
+  const experience = shiftExperience(c);
+  return `<div class="today-surface"><div class="page-heading today-heading"><div><div class="eyebrow"><span class="live-dot"></span><span id="live-state">${c.mode === 'actual' ? '实际记录' : '作息估算'} · ${c.state}</span></div><h1 id="today-title">${experience.heading}</h1></div><button class="outline-button" id="quick-settings">${icon('settings-2')} 调整工作时间</button></div>
+    <section class="historical-shift" id="historical-shift" ${experience.historical ? '' : 'hidden'}><div><strong>有历史班次尚未结束</strong><p id="historical-copy">以下数据属于 ${c.key} 班次，不是今日汇总。请核对真实结束时间后继续记录。</p></div><button type="button" class="outline-button" id="correct-historical">${icon('history')} 核对旧班次</button></section>
     <div id="work-controls" class="work-controls">${workControls(c)}</div>
     <p id="today-calendar" class="record-note"></p>
     <div id="overtime-reminder" class="overtime-reminder" hidden><div class="reminder-copy">${icon('circle-alert')}<p id="overtime-reminder-message" role="status"></p></div><div class="reminder-actions"><button type="button" id="correct-overtime" class="save-button">${icon('history')} 补填结束时间</button><button type="button" id="snooze-overtime" class="outline-button">${icon('check')} 仍在工作</button></div></div>
@@ -141,13 +154,13 @@ function todayView(c, d) {
         <section class="earnings-panel"><div class="panel-top"><span class="panel-kicker" id="earnings-label">${c.mode === 'actual' ? '本班已记录收入' : '今日预计收入'}</span><span class="earning-status"><span></span><b id="earning-state">${c.state}</b></span></div>
           <div class="earning-main"><div class="currency">¥</div><div class="earnings-number" id="earned-number">${money(c.earned, settings.amountPrecision)}</div><div class="coin-stage" id="coin-stage"><img class="dashboard-mascot" src="./hachiware-face.png" alt="小八角色头像" /></div></div>
           <div class="earning-footer"><span>${icon('trending-up')} <span id="earning-caption"></span></span><span>日薪 ¥${money(c.daily)}</span></div>
-          <div class="earning-track"><div id="earning-track-fill" style="width:${Math.min(100, c.earned / c.daily * 100)}%"></div></div>
+          <div class="schedule-progress" id="schedule-progress" ${experience.showProgress ? '' : 'hidden'}><div class="progress-caption"><span>计划班次进度 · 非收入进度</span><span id="progress-value">${Math.floor(experience.progress)}%</span></div><div class="earning-track" role="progressbar" aria-label="计划班次进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.floor(experience.progress)}"><div id="earning-track-fill" style="width:${experience.progress}%"></div></div></div>
           <div class="panel-grain"></div>
         </section>
         <div class="metric-grid">
           <section class="metric-card countdown"><div class="metric-icon orange">${icon('timer')}</div><div class="metric-copy"><span id="remaining-label">${presentation.timerLabel}</span><strong id="remaining">${duration(presentation.timerSeconds)}</strong><small id="remaining-caption">${presentation.timerCaption}</small></div><div class="tiny-clock"><span class="clock-hand"></span></div></section>
           <section class="metric-card"><div class="metric-icon green">${icon('clock-3')}</div><div class="metric-copy"><span>已工作时长</span><strong id="worked">${duration(c.worked)}</strong><small>含加班与有薪计划休息</small></div></section>
-          <section class="metric-card"><div class="metric-icon red">${icon('coffee')}</div><div class="metric-copy"><span>无偿打工时长</span><strong id="unpaid">${duration(c.unpaid)}</strong><small>含提前工作与无薪加班</small></div></section>
+          <section class="metric-card"><div class="metric-icon red">${icon('coffee')}</div><div class="metric-copy"><span id="rest-or-unpaid-label">${experience.resting ? experience.restLabel : '无偿打工时长'}</span><strong id="unpaid">${duration(experience.resting ? experience.restSeconds : c.unpaid)}</strong><small id="rest-or-unpaid-caption">${experience.resting ? experience.restCaption : '含提前工作与无薪加班'}</small></div></section>
         </div>
         <section class="timeline-section"><div class="section-title"><div><h2>本班时间轴</h2><p>${c.key} · ${c.mode === 'actual' ? '按打卡时的作息计算' : '按当前作息估算'}</p></div><span class="section-date">${dateLabel(d)}</span></div><div class="timeline-line">${timelineSegments(c)}<div class="timeline-now" id="timeline-now" style="left:${c.progress}%"><span></span></div></div><div class="timeline-labels"><div><b>${c.plan.start}</b><span>上班</span></div><div class="timeline-break-label"><b>${c.breaks.length ? c.breaks.map(rest => `${rest.start}–${rest.end}${rest.paid ? '（有薪）' : ''}`).join(' · ') : '无休息时段'}</b><span>${c.breaks.length} 段休息 · 无薪共 ${Math.round(c.breakTotal / 60)} 分钟</span></div><div><b>${c.plan.end}${c.end >= 86400 ? ' 次日' : ''}</b><span>下班</span></div></div><div class="legend"><span><i class="legend-dot working"></i> 工作时间</span><span><i class="legend-dot resting"></i> 无薪休息</span><span><i class="legend-dot paid-rest"></i> 有薪休息</span></div></section>
       </div>
@@ -157,7 +170,7 @@ function todayView(c, d) {
         <section class="daily-panel"><div class="section-title compact"><div><h2>计划作息</h2><p>${c.key}</p></div></div><div class="daily-item"><span class="daily-marker start">${icon('play')}</span><div><strong>计划上班</strong><small>${c.plan.start}</small></div></div>${c.breaks.map((rest, index) => `<div class="daily-item"><span class="daily-marker break">${icon('coffee')}</span><div><strong>${rest.paid ? '有薪' : '无薪'}休息 ${index + 1}</strong><small>${rest.start}–${rest.end}</small></div><span class="item-time">${Math.round((rest.to - rest.from) / 60)} 分钟</span></div>`).join('')}<div class="daily-item"><span class="daily-marker finish">${icon('sparkles')}</span><div><strong>计划下班</strong><small>${c.plan.end}${c.end >= 86400 ? ' 次日' : ''}</small></div><span class="item-time">${c.current >= c.end ? '已到时间' : '待完成'}</span></div></section>
       </div>
     </div>
-    <div class="bottom-bar"><span>${icon('info')} 金额仅供参考，实际薪资以劳动合同和发薪记录为准。</span><div><button id="pause-toggle" class="subtle-button" title="只冻结数字，不暂停打卡或计薪" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')} ${paused ? '恢复实时数字' : '冻结数字'}</button><span class="footer-separator"></span><button id="reset-clock" class="subtle-button" title="回到真实时间">${icon('rotate-ccw')} 回到现在</button></div></div>`;
+    <div class="bottom-bar"><span>${icon('info')} 金额仅供参考，实际薪资以劳动合同和发薪记录为准。</span><div><button id="pause-toggle" class="subtle-button" title="只冻结数字，不暂停打卡或计薪" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')} ${paused ? '恢复实时数字' : '冻结数字'}</button><span class="footer-separator"></span><button id="reset-clock" class="subtle-button" title="回到真实时间">${icon('rotate-ccw')} 回到现在</button></div></div></div>`;
 }
 function insightsView(c) {
   c = calculateSchedule(settings);
@@ -209,9 +222,11 @@ function exportHistory() {
   downloadFile(`Paydrop-${historyRange}-${dateKey(new Date())}.csv`, '\uFEFF' + text, 'text/csv;charset=utf-8');
 }
 function updateLive() {
+  if (needsSetup(store.data)) return;
   const c = calculate(), d = now();
   const live = currentCalculation(settings, store.data.records, new Date());
   const presentation = workPresentation(paused ? live : c);
+  const experience = shiftExperience(live);
   if (activeView === 'today' && liveKey !== c.key) { liveKey = c.key; refreshPage(); }
   const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
   const motion = settings.motion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -226,7 +241,13 @@ function updateLive() {
   }
   updateDigits(document.getElementById('remaining'), duration(workPresentation(c).timerSeconds), motion && !paused, presentation.timerDirection);
   updateDigits(document.getElementById('worked'), duration(c.worked), motion);
-  updateDigits(document.getElementById('unpaid'), duration(c.unpaid), motion);
+  updateDigits(document.getElementById('unpaid'), duration(experience.resting ? c.restSeconds : c.unpaid), motion && !paused);
+  set('rest-or-unpaid-label', experience.resting ? experience.restLabel : '无偿打工时长');
+  set('rest-or-unpaid-caption', experience.resting ? experience.restCaption : '含提前工作与无薪加班');
+  set('today-title', experience.heading);
+  const historical = document.getElementById('historical-shift');
+  if (historical) historical.hidden = !experience.historical;
+  set('historical-copy', `以下数据属于 ${live.key} 班次，不是今日汇总。请核对真实结束时间后继续记录。`);
   updateDigits(document.getElementById('current-time'), timeLabel(d), motion);
   set('earning-caption', `${presentation.rateLabel} · ¥${money(presentation.rate, 4)} / 秒 · ${presentation.detail}`);
   set('remaining-label', presentation.timerLabel);
@@ -248,7 +269,12 @@ function updateLive() {
   const controls = document.getElementById('work-controls');
   const signature = `${live.state}|${live.mode}|${live.key}|${Boolean(activeRecord(store.data.records))}`;
   if (controls && controls.dataset.signature !== signature) { controls.innerHTML = workControls(live); controls.dataset.signature = signature; refreshIcons(); }
-  const track = document.getElementById('earning-track-fill'); if (track) track.style.width = `${Math.min(100, c.earned / c.daily * 100)}%`;
+  const progress = shiftExperience(c);
+  const progressHost = document.getElementById('schedule-progress');
+  if (progressHost) progressHost.hidden = !progress.showProgress;
+  const track = document.getElementById('earning-track-fill');
+  if (track) { track.style.width = `${progress.progress}%`; track.parentElement.setAttribute('aria-valuenow', Math.floor(progress.progress)); }
+  set('progress-value', `${Math.floor(progress.progress)}%`);
   const marker = document.getElementById('timeline-now'); if (marker) marker.style.left = `${c.progress}%`;
   if (activeView === 'history') {
     const signature = `${store.data.revision}|${Math.floor(Date.now() / 15000)}`;
@@ -262,7 +288,7 @@ function updateOvertimeReminder() {
   const reminder = overtimeReminder(activeRecord(store.data.records), settings);
   const key = reminder?.key || '';
   if (key !== reminderKey) { reminderKey = key; reminderSnoozedUntil = 0; }
-  banner.hidden = !reminder || Date.now() < reminderSnoozedUntil;
+  banner.hidden = !reminder || shiftExperience(currentCalculation(settings, store.data.records)).historical || Date.now() < reminderSnoozedUntil;
   const message = document.getElementById('overtime-reminder-message');
   const text = reminder?.message || '';
   if (message.textContent !== text) message.textContent = text;
@@ -316,6 +342,7 @@ function updateSettings() {
     <button type="button" class="text-link" id="update-log">${icon('info')} 查看更新日志</button>`;
 }
 function showDrawer(content, label, wide = false) {
+  disposePreview?.(); disposePreview = null;
   clearTimeout(closeTimer);
   const drawer = document.getElementById('drawer'), overlay = document.getElementById('overlay');
   if (!drawer.classList.contains('open')) drawerFocus = document.activeElement;
@@ -335,13 +362,22 @@ function showDrawer(content, label, wide = false) {
   return drawer;
 }
 function openDrawer(kind = 'settings') {
+  if (needsSetup(store.data)) return;
   drawerBaseline = structuredClone(settings);
+  appearanceTheme = settings.theme;
   const content = kind === 'help' ? `<div class="drawer-header"><div><span>帮助</span><h2>计算说明</h2></div><button class="icon-button close-drawer" aria-label="关闭">${icon('x')}</button></div><div class="drawer-body help-body"><h3>秒薪怎么算？</h3><p>日薪 ÷ 每日有薪秒数。仅无薪计划休息会从有薪时间中扣除；有薪休息继续计薪。</p><h3>估算与实际记录</h3><p>作息估算按照计划时间计算，不会进入工作记录。实际记录按打卡时间累计，普通班次到计划下班时自动结束；只有主动开始的加班才会累计。每个班次沿用首次打卡时的薪资与作息。</p><h3>无薪时长是什么？</h3><p>包含计划上班前的提前工作和未开启加班计薪的已记录加班。计划无薪休息、临时休息不算工作，也不算无薪加班。</p><h3>跨午夜的班次</h3><p>下班时间早于上班时间时，下班归于次日，记录归属上班日期。普通班次自动结束；跨日加班需要主动结束。</p><h3>冻结数字与工作休息</h3><p>冻结数字不结束打卡或暂停计薪，小八休息也不会改变打卡。临时离开请使用“休息（不计薪）”；继续工作时按本班参数计薪。</p><h3>修正与备份</h3><p>工作记录中可核对实际时段，修正须填写真实结束时间并确认变更；原始时段与本班参数保留。删除的班次可在“已删除”中恢复。配置备份不含记录，完整备份包含配置、全部记录与修订历史；恢复完整备份前须结束当前班次。</p><div class="help-note">金额仅供参考，以劳动合同和发薪记录为准。</div></div>` : settingsForm();
   const drawer = showDrawer(content, kind === 'help' ? '计算说明' : '薪资与作息设置');
   if (kind === 'settings') {
     drawer.querySelector('#settings-appearance').innerHTML = `<div class="form-section-title">外观主题</div>${themeControls('theme-picker')}${opacityControls()}`;
     refreshIcons();
-    drawer.querySelectorAll('[data-theme-choice]').forEach(button => button.onclick = () => attempt(() => chooseTheme(button.dataset.themeChoice)));
+    drawer.querySelectorAll('[data-theme-choice]').forEach(button => button.onclick = () => {
+      appearanceTheme = button.dataset.themeChoice;
+      drawer.querySelectorAll('[data-theme-choice]').forEach(item => {
+        item.classList.toggle('selected', item.dataset.themeChoice === appearanceTheme);
+        item.setAttribute('aria-pressed', String(item.dataset.themeChoice === appearanceTheme));
+      });
+      drawer.querySelector('#settings-form').dispatchEvent(new Event('input', { bubbles: true }));
+    });
     drawer.querySelectorAll('.opacity-control input').forEach(input => {
       input.oninput = () => { input.closest('.opacity-control').querySelector('output').value = `${input.value}%`; };
     });
@@ -410,8 +446,9 @@ function openDrawer(kind = 'settings') {
     updateSettingsImpact();
     drawer.querySelector('#reset-defaults').onclick = () => attempt(async () => {
       if (!confirm('恢复默认设置？工作记录会保留。')) return;
-      await patchSettings(structuredClone(defaults)); closeDrawer(); render(); toast('已恢复默认设置');
+      await patchSettings({ ...structuredClone(defaults), setupComplete: true }); closeDrawer(); render(); toast('已恢复默认设置');
     });
+    disposePreview = mountAppearancePreview(drawer.querySelector('#settings-form'), () => readSettingsForm(drawer.querySelector('#settings-form')));
   }
 }
 function breakRow(rest, index) {
@@ -450,6 +487,7 @@ function settingsForm() {
     <label class="switch-row"><div><strong>加班计薪</strong><span>主动记录的加班按设定倍率计薪</span></div><input name="paidOvertime" type="checkbox" ${settings.paidOvertime ? 'checked' : ''}><i></i></label>
   </section>
   <section role="tabpanel" id="settings-panel-appearance" aria-labelledby="settings-tab-appearance" data-settings-panel="appearance" hidden>
+    <figure class="appearance-preview"><figcaption><strong>挂件预览</strong><span>示例数据 · 保存后生效</span></figcaption><div id="preview-stage" class="preview-stage"><iframe id="appearance-preview" src="./widget.html?preview=1" title="挂件外观预览" tabindex="-1"></iframe></div><output id="preview-size"></output></figure>
     <div id="settings-appearance"></div>
     <label class="switch-row"><div><strong>金币音效</strong><span>金币掉落时播放轻提示音</span></div><input name="sound" type="checkbox" ${settings.sound ? 'checked' : ''}><i></i></label>
     <label class="switch-row"><div><strong>动态效果</strong><span>显示金币掉落与数字过渡</span></div><input name="motion" type="checkbox" ${settings.motion ? 'checked' : ''}><i></i></label>
@@ -492,7 +530,7 @@ function readSettingsForm(element) {
     workdays: form.getAll('workday').map(Number), workCalendar: form.get('workCalendar'), exceptions: form.getAll('exceptionDate').map((date, index) => ({ date, working: working[index] === 'true' })),
     trackingMode: form.get('trackingMode'), overtimeMultiplier: Number(form.get('overtimeMultiplier')),
     overtimeReminderEnabled: form.has('overtimeReminderEnabled'), overtimeReminderHours: Number(form.get('overtimeReminderHours')),
-    paidOvertime: form.has('paidOvertime'), sound: form.has('sound'), motion: form.has('motion'), theme: settings.theme,
+    paidOvertime: form.has('paidOvertime'), sound: form.has('sound'), motion: form.has('motion'), theme: appearanceTheme ?? settings.theme,
     backgroundOpacity: Number(form.get('backgroundOpacity')), widgetOpacity: Number(form.get('widgetOpacity')),
     amountPrecision: Number(form.get('amountPrecision')), widgetScale: Number(form.get('widgetScale')), widgetDensity: form.get('widgetDensity'),
     alwaysOnTop: form.has('alwaysOnTop'), closeToTray: form.has('closeToTray'),
@@ -514,7 +552,7 @@ function updateSettingsImpact() {
     : next.trackingMode === 'estimate' ? '保存后用于当前作息估算；已有打卡记录保持不变。' : '保存后用于新班次；已有记录及同日续班保持原参数。';
   const immediate = document.createElement('p');
   immediate.className = 'settings-effect-note';
-  immediate.textContent = '主题选择立即生效；其他外观与提醒选项保存后生效。';
+  immediate.textContent = '本面板的修改保存后生效，已有记录保持不变。';
   if (error) {
     const invalid = document.createElement('p');
     invalid.className = 'settings-effect-note';
@@ -551,17 +589,17 @@ async function saveSettings(event) {
   const next = readSettingsForm(event.currentTarget);
   const error = settingsError(next);
   if (error) { document.getElementById('form-error').textContent = error; return; }
-  const patch = Object.fromEntries(Object.entries(next).filter(([key, value]) => key !== 'theme' && JSON.stringify(value) !== JSON.stringify(drawerBaseline[key])));
+  const patch = Object.fromEntries(Object.entries(next).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(drawerBaseline[key])));
   const button = event.currentTarget.querySelector('[type="submit"]'); button.disabled = true;
   try { await patchSettings(patch, drawerBaseline); closeDrawer(); render(); toast('设置已保存；已有班次及同日续班仍沿用原参数'); }
   catch (error) { document.getElementById('form-error').textContent = error.message || '保存失败，请重试'; }
   finally { if (button.isConnected) button.disabled = false; }
 }
-function closeDrawer() { const drawer = document.getElementById('drawer'), overlay = document.getElementById('overlay'); drawer.classList.remove('open'); drawer.inert = true; document.querySelector('.app-shell').inert = false; overlay.classList.remove('visible'); drawer.setAttribute('aria-hidden', 'true'); if (drawerFocus?.isConnected) drawerFocus.focus(); else document.getElementById('open-settings').focus(); clearTimeout(closeTimer); closeTimer = setTimeout(() => { overlay.hidden = true; }, 260); }
+function closeDrawer() { disposePreview?.(); disposePreview = null; const drawer = document.getElementById('drawer'), overlay = document.getElementById('overlay'); drawer.classList.remove('open'); drawer.inert = true; document.querySelector('.app-shell').inert = false; overlay.classList.remove('visible'); drawer.setAttribute('aria-hidden', 'true'); if (drawerFocus?.isConnected) drawerFocus.focus(); else document.getElementById('open-settings').focus(); clearTimeout(closeTimer); closeTimer = setTimeout(() => { overlay.hidden = true; }, 260); }
 function bind() {
   bindCalendar();
   document.querySelector('.topbar [data-return-widget]').onclick = returnToWidget;
-  document.querySelectorAll('[data-theme-choice]').forEach(button => button.onclick = () => attempt(() => chooseTheme(button.dataset.themeChoice)));
+  document.querySelectorAll('.theme-toolbar [data-theme-choice]').forEach(button => button.onclick = () => attempt(() => chooseTheme(button.dataset.themeChoice)));
   document.querySelectorAll('[data-view]').forEach(button => button.onclick = () => { activeView = button.dataset.view; render(); });
   ['open-settings', 'open-settings-side', 'quick-settings', 'rate-settings', 'compare-pay-settings'].forEach(id => { const el = document.getElementById(id); if (el) el.onclick = () => openDrawer(); });
   document.getElementById('open-help').onclick = () => openDrawer('help');
@@ -588,6 +626,11 @@ function bind() {
     const record = activeRecord(store.data.records);
     if (record) recordTools.editor(record.id, { finishOnly: true });
     else toast('此班次已结束，请查看工作记录。');
+  };
+  const historical = document.getElementById('correct-historical');
+  if (historical) historical.onclick = () => {
+    const record = activeRecord(store.data.records);
+    if (record) recordTools.editor(record.id, { finishOnly: true });
   };
 }
 function bindCalendar() {
@@ -689,7 +732,9 @@ document.addEventListener('keydown', event => {
 });
 store.subscribe(data => {
   settings = data.settings; document.body.dataset.theme = settings.theme;
-  document.querySelectorAll('[data-theme-choice]').forEach(button => { button.classList.toggle('selected', button.dataset.themeChoice === settings.theme); button.setAttribute('aria-pressed', String(button.dataset.themeChoice === settings.theme)); });
+  if (needsSetup(data)) return;
+  if (document.getElementById('setup-form')) { render(); return; }
+  document.querySelectorAll('.theme-toolbar [data-theme-choice]').forEach(button => { button.classList.toggle('selected', button.dataset.themeChoice === settings.theme); button.setAttribute('aria-pressed', String(button.dataset.themeChoice === settings.theme)); });
   const sound = document.getElementById('sound-toggle');
   if (sound) { sound.title = settings.sound ? '关闭金币音效' : '开启金币音效'; sound.innerHTML = icon(settings.sound ? 'volume-2' : 'volume-x'); }
   refreshPage(); updateLive(); updateSettingsImpact();
