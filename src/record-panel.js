@@ -2,7 +2,8 @@ import { store } from './client-store.js';
 import { applyOperation, normalizeData } from './data-model.js';
 import { calculateRecord, activeRecord } from './work-log.js';
 import { dateKey, shiftFor } from './schedule.js';
-import { backupEnvelope, readBackup } from './record-management.js';
+import { backupEnvelope, readBackup, finishRecordPatch } from './record-management.js';
+import { calendarName } from './china-calendar.js';
 
 const kinds = { work: '普通工作', break: '临时无薪休息', overtime: '加班' };
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -21,9 +22,22 @@ const header = (title, icon) => `<div class="drawer-header"><div><span>工作记
 function timeline(record) {
   return `<ol class="record-timeline">${record.segments.map(segment => `<li data-kind="${segment.kind}"><strong>${kinds[segment.kind]}</strong><span>${timeText(segment.start)}<br>${timeText(segment.end)}</span></li>`).join('')}</ol>`;
 }
+function timelineOverview(record) {
+  if (record.segments.length <= 4) return timeline(record);
+  const last = record.segments.at(-1);
+  return `<div class="record-focus"><p class="record-note">${last.end === null ? '当前进行中' : '最后一段'}</p>${timeline({ segments: [last] })}</div>
+    <details class="record-audit"><summary>此前 ${record.segments.length - 1} 段打卡</summary>${timeline({ segments: record.segments.slice(0, -1) })}</details>`;
+}
+const backupStampKey = 'paydrop:last-backup-export';
+function backupStamp() {
+  try {
+    const value = Number(localStorage.getItem(backupStampKey));
+    return value > 0 && Number.isFinite(value) ? `本设备最近发起完整备份：${timeText(value)}` : '本设备尚无完整备份导出记录';
+  } catch { return '无法读取本设备备份时间'; }
+}
 function snapshot(record) {
   const plan = record.settings;
-  return `<dl class="record-snapshot"><div><dt>日薪</dt><dd>¥${currency(Number(plan.dailySalary))}</dd></div><div><dt>计划作息</dt><dd>${plan.start}–${plan.end}</dd></div><div><dt>加班计薪</dt><dd>${plan.paidOvertime ? `${plan.overtimeMultiplier} 倍` : '无薪'}</dd></div><div><dt>计划休息</dt><dd>${plan.breaks.length ? plan.breaks.map(rest => `${rest.start}–${rest.end}（${rest.paid ? '有薪' : '无薪'}）`).join('、') : '无'}</dd></div></dl>`;
+  return `<dl class="record-snapshot"><div><dt>日薪</dt><dd>¥${currency(Number(plan.dailySalary))}</dd></div><div><dt>计划作息</dt><dd>${plan.start}–${plan.end}</dd></div><div><dt>工作日历</dt><dd>${calendarName(plan.workCalendar)}</dd></div><div><dt>加班计薪</dt><dd>${plan.paidOvertime ? `${plan.overtimeMultiplier} 倍` : '无薪'}</dd></div><div><dt>计划休息</dt><dd>${plan.breaks.length ? plan.breaks.map(rest => `${rest.start}–${rest.end}（${rest.paid ? '有薪' : '无薪'}）`).join('、') : '无'}</dd></div></dl>`;
 }
 function metrics(value) {
   return `<div class="record-metrics"><div><span>记录收入</span><strong>¥${currency(value.earned)}</strong></div><div><span>工作时长</span><strong>${hours(value.worked)}</strong></div><div><span>加班时长</span><strong>${hours(value.overtime)}</strong></div><div><span>无薪时长</span><strong>${hours(value.unpaid)}</strong></div></div>`;
@@ -50,14 +64,15 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
     if (!source) return toast('记录已变化，请重新选择。');
     const record = structuredClone(source);
     const value = calculateRecord(record);
-    const drawer = show(`${header(record.date, icon)}<div class="drawer-body record-body"><div class="record-meta">${record.finishedAt === null ? '进行中 · 核对时刻快照' : '已结束'}${record.origin === 'manual' ? ' · 手动补卡' : ''}</div>${metrics(value)}<h3 class="record-section-title">实际打卡时段</h3>${timeline(record)}<h3 class="record-section-title">本班计薪参数</h3>${snapshot(record)}${audit(record)}</div><div class="drawer-footer"><span class="record-note">本班参数不会随新设置改变</span><button class="save-button" id="edit-record">${icon('settings-2')} 修正打卡</button></div>`, '班次详情');
+    const drawer = show(`${header(record.date, icon)}<div class="drawer-body record-body"><div class="record-meta">${record.finishedAt === null ? '进行中 · 核对时刻快照' : '已结束'}${record.origin === 'manual' ? ' · 手动补卡' : ''}</div>${metrics(value)}<h3 class="record-section-title">实际打卡时段</h3>${timelineOverview(record)}<details class="record-audit"><summary>本班计薪参数 · 日薪 ¥${currency(Number(record.settings.dailySalary))}</summary>${snapshot(record)}</details>${audit(record)}</div><div class="drawer-footer"><span class="record-note">本班参数不会随新设置改变</span><button class="save-button" id="edit-record">${icon('settings-2')} 修正打卡</button></div>`, '班次详情');
     drawer.querySelector('#edit-record').onclick = () => editor(record.id);
   }
 
-  function editor(id) {
+  function editor(id, { finishOnly = false } = {}) {
     const baseline = structuredClone(store.data);
     const original = id ? baseline.records.find(record => record.id === id) : null;
     if (id && !original) return toast('记录已变化，请重新选择。');
+    if (finishOnly && (!original || original.finishedAt !== null)) return toast('此班次已结束，请重新查看记录。');
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const date = original?.date || dateKey(yesterday);
     const plan = original?.settings || baseline.settings;
@@ -65,15 +80,20 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
     const initial = original?.segments || [{ kind: 'work', start: shift.startAt, end: shift.endAt }];
     const newId = original?.id || crypto.randomUUID();
     let preview = null;
-    const drawer = show(`${header(original ? '修正打卡' : '补录班次', icon)}<form id="record-form"><div class="drawer-body record-body">
+    const title = finishOnly ? '补填结束时间' : original ? '修正打卡' : '补录班次';
+    const drawer = show(`${header(title, icon)}<form id="record-form"><div class="drawer-body record-body">
       <p class="record-note">${original ? '沿用本班日薪和作息；原始时段将保留在修订历史中。' : '使用当前日薪和作息；同日期已有记录请直接修正原班次。'}</p>
       <label class="field">班次日期<input name="recordDate" type="date" value="${date}" required ${original ? 'readonly' : ''}></label>
       <details class="record-audit"><summary>计薪参数 · 日薪 ¥${currency(Number(plan.dailySalary))}</summary>${snapshot({ settings: plan })}</details>
+      ${finishOnly ? `<dl class="record-snapshot"><div><dt>最后一段开始</dt><dd>${timeText(initial.at(-1).start)}</dd></div><div><dt>记录状态</dt><dd>${kinds[initial.at(-1).kind]} · 未结束</dd></div></dl>
+      <label class="field">实际结束时间<input name="actualEnd" type="datetime-local" step="1" required></label>
+      <p class="record-note">只补填最后一段的结束时间；此前 ${initial.length - 1} 段保持不变。</p>
+      <button type="button" class="text-link" id="edit-all-segments">${icon('settings-2')} 修改其他打卡时段</button>` : `
       <div class="record-section-heading"><h3 class="record-section-title">实际打卡时段</h3><button type="button" class="text-link" id="add-segment">${icon('plus')} 添加时段</button></div>
-      <div id="record-segments">${initial.map((segment, index) => segmentRow(segment, index, icon)).join('')}</div>
+      <div id="record-segments">${initial.map((segment, index) => segmentRow(segment, index, icon)).join('')}</div>`}
       <label class="field">修正原因<textarea name="recordReason" maxlength="200" rows="2" required placeholder="${original ? '例如：忘记结束加班，实际于 20:30 下班' : '例如：昨日漏打卡'}"></textarea></label>
       <div id="record-preview" aria-live="polite"></div><div id="record-error" class="form-error" role="alert"></div>
-      </div><div class="drawer-footer"><button class="outline-button" type="button" id="preview-record">${icon('info')} 核对变更</button><button type="submit" class="save-button" disabled>${icon('check')} 保存记录</button></div></form>`, original ? '修正打卡' : '补录班次');
+      </div><div class="drawer-footer"><button class="outline-button" type="button" id="preview-record">${icon('info')} 核对变更</button><button type="submit" class="save-button" disabled>${icon('check')} 保存记录</button></div></form>`, title);
     const form = drawer.querySelector('#record-form');
     const list = drawer.querySelector('#record-segments');
     const save = form.querySelector('[type="submit"]');
@@ -98,7 +118,11 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
         previousDate = nextDate;
       });
     }
-    drawer.querySelector('#add-segment').onclick = () => {
+    if (finishOnly) drawer.querySelector('#edit-all-segments').onclick = () => {
+      if ((form.elements.actualEnd.value || form.elements.recordReason.value) && !confirm('切换后将丢弃当前未保存的补填内容，继续修改全部时段？')) return;
+      editor(id);
+    };
+    if (!finishOnly) drawer.querySelector('#add-segment').onclick = () => {
       if (list.children.length >= 100) { error.textContent = '单次编辑最多 100 段。'; return; }
       const lastEnd = list.lastElementChild.querySelector('[name="segmentEnd"]').value;
       const start = lastEnd ? new Date(lastEnd).getTime() : shift.endAt;
@@ -106,7 +130,7 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
       invalidate(); refreshIcons();
       list.lastElementChild.querySelector('select').focus();
     };
-    list.onclick = event => {
+    if (list) list.onclick = event => {
       const remove = event.target.closest('[data-remove-segment]');
       if (!remove) return;
       if (list.children.length === 1) { error.textContent = '至少保留一段打卡时段。'; return; }
@@ -121,6 +145,8 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
       invalidate();
     };
     function operation() {
+      if (finishOnly) return { type: 'correct-record', id: original.id, expected: original,
+        patch: finishRecordPatch(original, new Date(form.elements.actualEnd.value).getTime()), reason: form.elements.recordReason.value };
       const readTime = (row, name) => {
         const value = new Date(row.querySelector(`[name="segment${name}"]`).value).getTime();
         const originalTime = row.dataset[name.toLowerCase()];
@@ -188,6 +214,7 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
     let expectedRevision;
     let readVersion = 0;
     const drawer = show(`${header('完整备份与恢复', icon)}<div class="drawer-body record-body"><h3 class="record-section-title">完整备份</h3><p class="record-note">包含配置、工作记录、修订历史和已删除记录。</p>
+      <div class="backup-status"><p id="backup-last-export" class="record-note">${backupStamp()}</p><p class="record-note">时间仅表示发起导出，请确认下载文件已妥善保存。</p></div>
       <div class="config-actions"><button class="outline-button" id="export-backup">${icon('download')} 导出完整备份</button><button class="outline-button" id="import-backup">${icon('upload')} 选择备份</button><input id="backup-file" type="file" accept=".json,application/json" hidden></div>
       <h3 class="record-section-title">恢复前快照</h3><p class="record-note">最近一次恢复之前的数据单独保留，不受日常保存影响。</p>
       <button class="outline-button" id="load-recovery">${icon('rotate-ccw')} 核对恢复前数据</button>
@@ -195,7 +222,15 @@ export function createRecordTools({ show, close, icon, refreshIcons, toast, down
       <div class="drawer-footer"><span class="record-note">恢复会替换当前数据，不合并记录</span><button class="save-button" id="restore-backup" disabled>${icon('check')} 确认恢复</button></div>`, '完整备份与恢复');
     const error = drawer.querySelector('#backup-error');
     const restore = drawer.querySelector('#restore-backup');
-    drawer.querySelector('#export-backup').onclick = () => download(`Paydrop-backup-${dateKey(new Date())}.json`, JSON.stringify(backupEnvelope(store.data), null, 2));
+    drawer.querySelector('#export-backup').onclick = () => {
+      try {
+        download(`Paydrop-backup-${dateKey(new Date())}.json`, JSON.stringify(backupEnvelope(store.data), null, 2));
+        try { localStorage.setItem(backupStampKey, String(Date.now())); } catch {}
+        const stamp = drawer.querySelector('#backup-last-export');
+        if (stamp) stamp.textContent = backupStamp();
+        toast('已发起完整备份下载，请确认文件已保存');
+      } catch (failure) { error.textContent = failure.message || '备份导出失败，请重试'; }
+    };
     function preview(input) {
       const imported = readBackup(input, normalizeData);
       pending = input; expectedRevision = store.data.revision;

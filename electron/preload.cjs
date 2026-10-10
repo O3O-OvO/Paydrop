@@ -2,6 +2,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('paydropDesktop', {
   openDashboard: () => ipcRenderer.send('widget:open-dashboard'),
+  reviewRecord: id => ipcRenderer.send('widget:review-record', id),
+  takeReviewRecord: () => ipcRenderer.invoke('dashboard:take-review-record'),
+  onReviewRecord: callback => {
+    const listener = () => callback();
+    ipcRenderer.on('dashboard:review-record', listener);
+    return () => ipcRenderer.removeListener('dashboard:review-record', listener);
+  },
   showWidget: () => ipcRenderer.send('dashboard:show-widget'),
   revealWidget: () => ipcRenderer.send('pet:reveal-widget'),
   showPet: () => ipcRenderer.send('pet:show'),

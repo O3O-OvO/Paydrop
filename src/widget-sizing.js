@@ -1,6 +1,10 @@
 export const MIN_WIDGET_SCALE = 80;
 export const MAX_WIDGET_SCALE = 150;
 
+export function widgetHeight(settings) {
+  return (settings.widgetDensity === 'compact' ? 272 : 304) + (settings.widgetPetEnabled ? 96 : 0);
+}
+
 export function clampWidgetScale(value) {
   return Math.max(MIN_WIDGET_SCALE, Math.min(MAX_WIDGET_SCALE, Number(value) || 100));
 }

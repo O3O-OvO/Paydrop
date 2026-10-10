@@ -3,12 +3,56 @@ import test from 'node:test';
 import { normalizeData, applyOperation } from './data-model.js';
 import { normalizeSettings } from './settings.js';
 import { calculateRecord, workAction } from './work-log.js';
-import { backupEnvelope, readBackup, validDate } from './record-management.js';
+import { backupEnvelope, readBackup, validDate, finishRecordPatch } from './record-management.js';
 
 const at = (hour, minute = 0, day = 5) => new Date(2026, 9, day, hour, minute);
 const now = at(12, 0, 10);
 const plan = normalizeSettings({ dailySalary: 720, start: '09:00', end: '18:00', breaks: [{ start: '12:00', end: '13:00' }], trackingMode: 'actual', paidOvertime: true, overtimeMultiplier: 2 });
 const segment = (kind, from, to) => ({ kind, start: from.getTime(), end: to?.getTime() ?? null });
+
+test('quick finish only closes the last segment and preserves earlier punches and salary', () => {
+  let records = workAction([], plan, 'overtime', at(19));
+  records = workAction(records, plan, 'break', at(20));
+  records = workAction(records, plan, 'resume', at(20, 15));
+  records[0].segments[0].start += 123;
+  const original = structuredClone(records[0]);
+  const data = normalizeData({ settings: { ...plan, dailySalary: 999 }, records });
+  const patch = finishRecordPatch(original, at(21).getTime());
+  const next = applyOperation(data, { type: 'correct-record', id: original.id, expected: original, patch, reason: '补填真实下班时间' }, now);
+  assert.deepEqual(next.records[0].segments.slice(0, -1), original.segments.slice(0, -1));
+  assert.deepEqual(next.records[0].settings, original.settings);
+  assert.equal(next.records[0].finishedAt, at(21).getTime());
+  assert.equal(next.records[0].corrections.at(-1).previous.finishedAt, null);
+  assert.deepEqual(records[0], original);
+});
+
+test('quick finish while resting does not convert rest into paid work', () => {
+  let records = workAction([], plan, 'overtime', at(19));
+  records = workAction(records, plan, 'break', at(20));
+  const record = records[0];
+  const patch = finishRecordPatch(record, at(21).getTime());
+  const result = applyOperation(normalizeData({ settings: plan, records }), {
+    type: 'correct-record', id: record.id, expected: record, patch, reason: '休息后已离岗',
+  }, now);
+  assert.equal(result.records[0].segments.at(-1).kind, 'break');
+  assert.equal(result.records[0].segments.at(-1).resumeKind, 'overtime');
+  assert.equal(calculateRecord(result.records[0], now).worked, 3600);
+});
+
+test('quick finish rejects stale records, missing end times, future times and reversed ranges', () => {
+  const data = fixture(true);
+  const record = data.records[0];
+  for (const end of [NaN, null, record.segments[0].start, record.segments[0].start - 1]) {
+    assert.throws(() => finishRecordPatch(record, end), /结束时间/);
+  }
+  assert.throws(() => finishRecordPatch({ ...record, finishedAt: at(20).getTime() }, at(21).getTime()), /已结束/);
+  const operation = { type: 'correct-record', id: record.id, expected: record,
+    patch: finishRecordPatch(record, at(20).getTime()), reason: '忘记下班' };
+  const changed = applyOperation(data, { type: 'work', action: 'break' }, at(19, 30));
+  assert.throws(() => applyOperation(changed, operation, now), /另一窗口/);
+  const future = { ...operation, patch: finishRecordPatch(record, at(13, 0, 10).getTime()) };
+  assert.throws(() => applyOperation(data, future, now), /未来/);
+});
 function fixture(active = false) {
   let records = workAction([], plan, 'overtime', at(19));
   if (!active) records = workAction(records, plan, 'end', at(22));

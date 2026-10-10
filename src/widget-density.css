@@ -1,0 +1,7 @@
+.widget-layout-label { display: block; padding: 4px 8px; font-size: 11px; }
+#widget-layout { width: calc(100% - 16px); margin: 2px 8px 8px; padding: 5px; border: 1px solid currentColor; border-radius: 4px; background: inherit; color: inherit; font: inherit; font-size: 12px; }
+body[data-density="compact"] .widget-metrics { grid-template-columns: minmax(0, 1fr); margin-top: 9px; padding-top: 9px; }
+body[data-density="compact"] .widget-metrics > div:not(:first-child) { display: none; }
+body[data-density="compact"] .widget-metrics > div:first-child { display: flex; align-items: center; border: 0; gap: 5px; }
+body[data-density="compact"] .widget-metrics strong { margin: 0 0 0 auto; font-size: 15px; }
+body[data-density="compact"] .widget-companion { top: 222px; }

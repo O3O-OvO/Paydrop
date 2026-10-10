@@ -14,6 +14,23 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .overtime-reminder { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 0 12px 12px; margin-bottom: 18px; border-left: 3px solid #b15364; color: var(--tool-text); }
 .overtime-reminder > div { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 220px; }
 .overtime-reminder svg { width: 17px; height: 17px; flex: none; color: #b15364; }
+.overtime-reminder > .reminder-actions { flex: 0 1 auto; min-width: 0; flex-wrap: wrap; gap: 8px; }
+.reminder-actions .save-button svg { color: inherit; }
+.snapshot-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.snapshot-notice .text-link { margin: 0; }
+.display-frozen-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; border-bottom: 1px solid var(--tool-line); padding: 0 0 12px; margin-bottom: 16px; color: var(--tool-text); font-size: 12px; }
+.display-frozen-note[hidden] { display: none; }
+.display-frozen-note .text-link { margin: 0; }
+.settings-pay-impact { color: var(--tool-text); margin-bottom: 20px; }
+.pay-comparison { border-block: 1px solid var(--tool-line); }
+.pay-comparison summary { cursor: pointer; padding: 12px 0; font-size: 12px; font-weight: 600; }
+.pay-comparison dl { margin: 0; }
+.pay-setting-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 6px 14px; padding: 10px 0; border-top: 1px solid var(--tool-line); }
+.pay-setting-row dt { grid-column: 1 / -1; font-size: 12px; font-weight: 600; }
+.pay-setting-row dd { margin: 0; min-width: 0; line-height: 1.6; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.pay-setting-row dd span { display: block; font-size: 11px; color: var(--tool-muted); }
+.pay-setting-row dd strong { display: block; font-size: 12px; font-weight: 500; }
+.pay-setting-row.changed dd:last-child strong { color: var(--tool-accent); font-weight: 700; }
 .overtime-reminder p { margin: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .snapshot-notice,.settings-effect-note { margin: 0 0 18px; color: var(--tool-muted); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
 .settings-effect-note { font-size: 11px; margin-bottom: 12px; }

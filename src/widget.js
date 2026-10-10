@@ -1,4 +1,4 @@
-import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert } from 'lucide';
+import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert, Eye, Moon } from 'lucide';
 import './widget.css';
 import './widget-themes.css';
 import './widget-opacity.css';
@@ -7,6 +7,7 @@ import './widget-update.css';
 import './widget-session.css';
 import './widget-companion.css';
 import './widget-sizing.css';
+import './widget-density.css';
 import { updateDigits } from './digit-motion.js';
 import { updateCountedAmount } from './amount-counter.js';
 import { store } from './client-store.js';
@@ -14,9 +15,9 @@ import { defaults } from './settings.js';
 import { activeRecord, currentCalculation } from './work-log.js';
 import { workPresentation, overtimeReminder } from './work-status.js';
 import { companionMarkup, mountWidgetCompanion } from './widget-companion.js';
-import { clampWidgetScale, scaleAfterDrag, MIN_WIDGET_SCALE, MAX_WIDGET_SCALE } from './widget-sizing.js';
+import { clampWidgetScale, scaleAfterDrag, widgetHeight, MIN_WIDGET_SCALE, MAX_WIDGET_SCALE } from './widget-sizing.js';
 
-const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert };
+const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert, Eye, Moon };
 const themes = ['minimal', 'night', 'hachiware'];
 let settings = (await store.init()).settings;
 let previousTier = null;
@@ -54,7 +55,10 @@ function applyTheme() {
   document.body.dataset.theme = themes.includes(settings.theme) ? settings.theme : 'hachiware';
   document.body.style.setProperty('--widget-background-opacity', opacity(settings.backgroundOpacity, defaults.backgroundOpacity));
   document.body.style.setProperty('--widget-opacity', opacity(settings.widgetOpacity, defaults.widgetOpacity, 20));
-  document.documentElement.style.setProperty('--widget-height', settings.widgetPetEnabled ? '400px' : '304px');
+  document.body.dataset.density = settings.widgetDensity || 'standard';
+  document.documentElement.style.setProperty('--widget-height', `${widgetHeight(settings)}px`);
+  const preset = document.getElementById('widget-layout');
+  if (preset) preset.value = settings.widgetPetEnabled ? 'companion' : settings.widgetDensity === 'compact' ? 'compact' : 'standard';
   applyWidgetScale();
   const petButton = document.getElementById('widget-pet');
   if (petButton) {
@@ -118,7 +122,7 @@ function bindWidgetSizing() {
     if (!event.isPrimary || event.button !== 0) return;
     toggleSizePanel(false);
     sizeDrag = { id: event.pointerId, x: event.screenX, y: event.screenY,
-      scale: scaleDraft ?? settings.widgetScale, height: settings.widgetPetEnabled ? 400 : 304 };
+      scale: scaleDraft ?? settings.widgetScale, height: widgetHeight(settings) };
     handle.setPointerCapture(event.pointerId);
     event.preventDefault();
   };
@@ -157,10 +161,12 @@ function togglePause() {
   paused = !paused;
   frozenAt = paused ? new Date() : null;
   const button = document.getElementById('widget-pause');
-  button.title = paused ? '继续实时展示' : '暂停展示';
+  button.title = paused ? '恢复实时数字' : '冻结数字（不暂停打卡或计薪）';
   button.setAttribute('aria-label', button.title);
   button.setAttribute('aria-pressed', String(paused));
-  button.innerHTML = icon(paused ? 'play' : 'pause');
+  button.innerHTML = `${icon(paused ? 'play' : 'pause')}<span>${paused ? '恢复实时数字' : '冻结数字'}</span>`;
+  document.getElementById('widget-display-menu').open = false;
+  document.querySelector('#widget-display-menu summary').focus();
   createIcons({ icons });
   tick(false);
 }
@@ -168,10 +174,10 @@ function render() {
   companion?.destroy();
   applyTheme();
   document.querySelector('#widget').innerHTML = `<section class="widget-card">
-    <header class="widget-header"><div class="widget-brand"><span class="widget-brand-icon">${icon('coins')}<img src="./hachiware-face.png" alt="" /></span><strong>薪动</strong><span>PAYDROP</span></div><div class="window-actions"><button id="widget-update" title="重启安装更新" aria-label="重启安装更新" hidden>${icon('refresh-cw')}</button><button id="widget-theme" title="切换主题" aria-label="切换主题">${icon('palette')}</button><button id="widget-pause" title="${paused ? '继续实时展示' : '暂停展示'}" aria-label="${paused ? '继续实时展示' : '暂停展示'}" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')}</button><button id="widget-settings" title="打开设置与详情" aria-label="打开设置与详情">${icon('settings-2')}</button><button id="widget-minimize" title="最小化" aria-label="最小化">${icon('minus')}</button><button id="widget-close" title="退出挂件" aria-label="退出挂件">${icon('x')}</button></div></header>
+    <header class="widget-header"><div class="widget-brand"><span class="widget-brand-icon">${icon('coins')}<img src="./hachiware-face.png" alt="" /></span><strong>薪动</strong><span>PAYDROP</span></div><div class="window-actions"><button id="widget-update" title="重启安装更新" aria-label="重启安装更新" hidden>${icon('refresh-cw')}</button><button id="widget-theme" title="切换主题" aria-label="切换主题">${icon('palette')}</button><details class="widget-display-menu" id="widget-display-menu"><summary title="画面显示" aria-label="画面显示">${icon('eye')}</summary><div class="widget-display-options"><button id="widget-pause" title="冻结数字（不暂停打卡或计薪）" aria-label="冻结数字（不暂停打卡或计薪）" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')}<span>${paused ? '恢复实时数字' : '冻结数字'}</span></button><span>打卡与计薪不受影响</span></div></details><button id="widget-settings" title="打开设置与详情" aria-label="打开设置与详情">${icon('settings-2')}</button><button id="widget-minimize" title="最小化" aria-label="最小化">${icon('minus')}</button><button id="widget-close" title="退出挂件" aria-label="退出挂件">${icon('x')}</button></div></header>
     <div class="widget-label"><span class="status-dot"></span><span id="widget-state">工作中</span><button type="button" id="widget-review" class="widget-review" aria-label="核对长时加班记录" hidden>${icon('circle-alert')}<span>核对加班</span></button><span class="widget-label-right">今日已赚取</span></div>
     <div class="widget-amount"><span>¥</span><strong id="widget-earned">0.0000</strong><div class="coin-display" id="coin-display" role="img" aria-label="今日金币积累"><div class="coin-pile" id="coin-pile"><span class="coin-piece coin-one"></span><span class="coin-piece coin-two"></span><span class="coin-piece coin-three"></span><span class="coin-piece coin-four"></span><span class="coin-piece coin-five"></span><span class="coin-piece coin-six"></span></div><div id="widget-coins" class="widget-coins"></div></div></div>
-    <div class="widget-rate">${icon('trending-up')}<span id="widget-rate">¥0.0000 / 秒</span><span id="widget-rate-caption" class="rate-caption">实时计薪</span></div>
+    <div class="widget-rate">${icon('trending-up')}<span id="widget-rate">¥0.0000 / 秒</span><span id="widget-rate-caption" class="rate-caption">实时计薪</span><button type="button" id="widget-unfreeze" hidden title="数字已冻结，打卡状态未改变；点击恢复实时">数字已冻结 ${icon('play')}</button></div>
     <div class="widget-progress"><span id="widget-progress-fill"></span></div>
     <div class="widget-metrics"><div>${icon('timer')}<span id="widget-time-label">距计划下班</span><strong id="widget-remaining">00:00:00</strong></div><div>${icon('clock-3')}<span>已工作</span><strong id="widget-worked">00:00:00</strong></div><div>${icon('coffee')}<span>无偿时长</span><strong id="widget-unpaid">00:00:00</strong></div></div>
     ${companionMarkup()}
@@ -191,18 +197,31 @@ function render() {
     if (window.paydropDesktop) window.paydropDesktop.showPet();
     else window.location.href = new URL('./pet.html', window.location.href).href;
   });
+  document.querySelector('.widget-display-options').insertAdjacentHTML('afterbegin', `<label class="widget-layout-label" for="widget-layout">挂件布局</label><select id="widget-layout"><option value="compact">紧凑</option><option value="standard">标准</option><option value="companion">陪伴</option></select>`);
+  document.getElementById('widget-layout').onchange = event => attempt(() => store.dispatch({
+    type: 'settings', patch: { widgetDensity: event.target.value === 'compact' ? 'compact' : 'standard',
+      widgetPetEnabled: event.target.value === 'companion' }
+  }));
   createIcons({ icons });
   bindWidgetSizing();
   applyTheme();
   document.querySelector('#widget-theme').onclick = () => attempt(cycleTheme);
   document.querySelector('#widget-pause').onclick = togglePause;
+  document.querySelector('#widget-unfreeze').onclick = () => { if (paused) togglePause(); };
   document.querySelector('#widget-settings').onclick = () => {
     if (window.paydropDesktop) window.paydropDesktop.openDashboard();
     else window.location.href = new URL('./index.html?settings=1', window.location.href).href;
   };
   document.getElementById('widget-review').onclick = () => {
-    if (window.paydropDesktop) window.paydropDesktop.openDashboard();
-    else window.location.href = new URL('./index.html', window.location.href).href;
+    const record = activeRecord(store.data.records);
+    if (!record) return;
+    if (window.paydropDesktop?.reviewRecord) window.paydropDesktop.reviewRecord(record.id);
+    else if (window.paydropDesktop) window.paydropDesktop.openDashboard();
+    else {
+      const url = new URL('./index.html', window.location.href);
+      url.searchParams.set('review', record.id);
+      window.location.href = url.href;
+    }
   };
   document.querySelector('#widget-minimize').onclick = () => window.paydropDesktop?.minimize();
   document.querySelector('#widget-close').onclick = () => window.paydropDesktop?.close();
@@ -224,26 +243,32 @@ function showUpdateState() {
 }
 function tick(allowCoin = true) {
   const result = data(paused ? frozenAt : new Date());
-  const presentation = workPresentation(result);
+  const live = paused ? data() : result;
+  const presentation = workPresentation(live);
   const update = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-  update('widget-state', paused ? '展示暂停' : result.state);
+  update('widget-state', live.state);
+  const calendarLabel = document.querySelector('.widget-label-right');
+  calendarLabel.textContent = ['official', 'manual'].includes(live.calendarDay.source) ? live.calendarDay.label : result.mode === 'actual' ? '本班已记录' : '今日预计收入';
+  calendarLabel.title = `${live.key} · ${live.calendarDay.label}${live.calendarDay.source === 'fallback' ? ' · 该年官方日历未收录' : ''}`;
   const earnedText = money(result.earned, settings.amountPrecision);
   const motion = !paused && settings.motion && !reducedMotion.matches;
-  companion?.sync(result, { enabled: settings.widgetPetEnabled, paused, motion, followWork: settings.petFollowWork });
+  companion?.sync(live, { enabled: settings.widgetPetEnabled, paused: false,
+    motion: settings.motion && !reducedMotion.matches, followWork: settings.petFollowWork });
   updateCountedAmount(document.getElementById('widget-earned'), result.earned, motion, allowCoin ? spawnWidgetCoin : undefined, settings.amountPrecision);
   const width = [...earnedText].reduce((total, char) => total + (/\d/.test(char) ? .74 : .3), 0);
   document.getElementById('widget-earned').style.fontSize = `${Math.min(39, Math.floor(210 / width))}px`;
   update('widget-rate', `${presentation.rateLabel} ¥${money(presentation.rate)} / 秒`);
   document.getElementById('widget-rate').title = `${presentation.detail}；标准秒薪 ¥${money(result.rate)} / 秒`;
-  update('widget-rate-caption', paused ? '暂停展示' : result.mode === 'actual' ? '实际记录' : '作息估算');
-  document.querySelector('.widget-label-right').textContent = result.mode === 'actual' ? '本班已记录' : '今日预计收入';
+  update('widget-rate-caption', result.mode === 'actual' ? '实际记录' : '作息估算');
+  document.getElementById('widget-rate-caption').hidden = paused;
+  document.getElementById('widget-unfreeze').hidden = !paused;
   update('widget-time-label', presentation.timerLabel);
   document.getElementById('widget-remaining').title = presentation.timerCaption;
-  updateDigits(document.getElementById('widget-remaining'), duration(presentation.timerSeconds), motion, presentation.timerDirection);
+  updateDigits(document.getElementById('widget-remaining'), duration(workPresentation(result).timerSeconds), motion, presentation.timerDirection);
   updateDigits(document.getElementById('widget-worked'), duration(result.worked), motion);
   updateDigits(document.getElementById('widget-unpaid'), duration(result.unpaid), motion);
   document.getElementById('widget-progress-fill').style.width = `${result.progress}%`;
-  document.querySelector('.widget-card').dataset.state = paused ? '已暂停' : result.state;
+  document.querySelector('.widget-card').dataset.state = live.state;
   const tier = coinTier(result.earned, result.daily);
   const pile = document.getElementById('coin-display');
   pile.dataset.tier = tier;
@@ -263,7 +288,7 @@ function tick(allowCoin = true) {
     const start = result.isWorkday && Date.now() < result.endAt;
     session.dataset.signature = signature;
     session.innerHTML = `<span>${result.key}</span><div>${record
-      ? `<button class="widget-work-command" data-widget-work="${last.kind === 'break' ? 'resume' : 'break'}" title="${last.kind === 'break' ? '继续工作记录' : '临时无薪休息，停止本次休息期间计薪'}" aria-label="${last.kind === 'break' ? '继续工作' : '临时无薪休息'}">${icon(last.kind === 'break' ? 'play' : 'coffee')}<span>${last.kind === 'break' ? '继续工作' : '临时休息'}</span></button>`
+      ? `<button class="widget-work-command" data-widget-work="${last.kind === 'break' ? 'resume' : 'break'}" title="${last.kind === 'break' ? '继续记录工作，按本班参数计薪' : '休息期间不累计收入与工作时长'}" aria-label="${last.kind === 'break' ? '继续工作' : '休息（不计薪）'}">${icon(last.kind === 'break' ? 'play' : 'coffee')}<span>${last.kind === 'break' ? '继续工作' : '休息（不计薪）'}</span></button>`
       : settings.trackingMode === 'actual' ? `<button class="widget-work-command" data-widget-work="${start ? 'start' : 'overtime'}" title="${start ? '开始工作记录' : '开始加班记录'}" aria-label="${start ? '开始工作' : '开始加班'}">${icon('play')}<span>${start ? '开始工作' : '开始加班'}</span></button>`
         : `<button id="widget-actual" title="切换到实际打卡" aria-label="切换到实际打卡">${icon('clipboard-check')}</button>`}</div>`;
     createIcons({ icons });
@@ -279,13 +304,21 @@ function spawnWidgetCoin() {
 store.subscribe(value => { settings = value.settings; applyTheme(); previousTier = null; tick(false); });
 document.addEventListener('click', event => {
   const work = event.target.closest('[data-widget-work]');
-  if (work && ['start', 'overtime', 'break', 'resume'].includes(work.dataset.widgetWork)) attempt(() => store.dispatch({ type: 'work', action: work.dataset.widgetWork }));
+  if (work && ['start', 'overtime', 'break', 'resume'].includes(work.dataset.widgetWork)) attempt(async () => {
+    await store.dispatch({ type: 'work', action: work.dataset.widgetWork });
+    if (paused) togglePause();
+  });
   if (event.target.closest('#widget-actual')) attempt(() => store.dispatch({ type: 'settings', patch: { trackingMode: 'actual' } }));
 });
 document.addEventListener('pointerdown', event => {
   if (!event.target.closest('#widget-size-panel, #widget-size-toggle')) toggleSizePanel(false);
+  if (!event.target.closest('#widget-display-menu')) document.getElementById('widget-display-menu').open = false;
 });
 document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.getElementById('widget-display-menu').open) {
+    document.getElementById('widget-display-menu').open = false;
+    document.querySelector('#widget-display-menu summary').focus();
+  }
   if (event.key === 'Escape' && !document.getElementById('widget-size-panel').hidden) {
     event.preventDefault(); toggleSizePanel(false, true);
   }

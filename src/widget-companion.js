@@ -22,7 +22,7 @@ export function companionMarkup() {
       <p class="widget-companion-message" id="widget-companion-message">今天也陪着你。</p>
       <div class="widget-companion-actions" role="toolbar" aria-label="小八互动">
         ${companionActions.map(item => `<button type="button" data-companion-action="${item.name}" title="${item.label}" aria-label="${item.label}"><i data-lucide="${item.icon}"></i></button>`).join('')}
-        <button type="button" data-companion-action="rest" title="让小八歇一会（不暂停计薪）" aria-label="小八休息 / 继续陪伴" aria-pressed="false"><i data-lucide="coffee"></i></button>
+        <button type="button" data-companion-action="rest" title="让小八歇一会（不暂停计薪）" aria-label="让小八休息（不暂停计薪）" aria-pressed="false"><i data-lucide="moon"></i></button>
       </div>
     </div>
   </section>`;
@@ -84,6 +84,7 @@ export function mountWidgetCompanion(host, openPet) {
       brain.toggleRest();
       restButton.setAttribute('aria-pressed', String(brain.resting));
       restButton.title = brain.resting ? '让小八继续陪伴（不改变计薪）' : '让小八歇一会（不暂停计薪）';
+      restButton.setAttribute('aria-label', brain.resting ? '让小八继续陪伴（不改变计薪）' : '让小八休息（不暂停计薪）');
       speak(brain.resting ? '让我歇一会儿。' : '休息好了，继续陪着你。');
     } else {
       const action = companionActions.find(item => item.name === button.dataset.companionAction);

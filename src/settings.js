@@ -1,15 +1,16 @@
 import { resolveBreaks, scheduleError } from './schedule.js';
+import { CHINA_CALENDAR } from './china-calendar.js';
 
 export const defaults = {
   dailySalary: 545.45, start: '09:00', end: '18:00',
   breaks: [{ start: '12:00', end: '13:00' }],
-  workdays: [1, 2, 3, 4, 5], exceptions: [],
+  workdays: [1, 2, 3, 4, 5], exceptions: [], workCalendar: 'weekly',
   paidOvertime: false, overtimeMultiplier: 1.5, trackingMode: 'estimate',
   overtimeReminderEnabled: true, overtimeReminderHours: 8,
   sound: false, motion: true, theme: 'hachiware',
   backgroundOpacity: 8, widgetOpacity: 100, amountPrecision: 4,
   alwaysOnTop: true, widgetScale: 100, closeToTray: true,
-  widgetPetEnabled: true,
+  widgetPetEnabled: true, widgetDensity: 'standard',
   petEnabled: false, petRoam: true, petFollowWork: true,
   petScale: 100, petOpacity: 100,
 };
@@ -26,6 +27,8 @@ export function settingsError(value) {
   }) || new Set(value.exceptions.map(item => item.date)).size !== value.exceptions.length) return '特殊日期无效或重复。';
   if (!['estimate', 'actual'].includes(value.trackingMode)) return '请选择有效的计薪模式。';
   if (!['minimal', 'night', 'hachiware'].includes(value.theme)) return '主题无效。';
+  if ('workCalendar' in value && !['weekly', CHINA_CALENDAR].includes(value.workCalendar)) return '工作日历版本无效，请更新软件或选择每周作息。';
+  if ('widgetDensity' in value && !['compact', 'standard'].includes(value.widgetDensity)) return '挂件布局无效。';
   if (![2, 4].includes(value.amountPrecision)) return '金额精度只支持 2 位或 4 位。';
   for (const [key, min, max] of [['dailySalary', 0.01, 1000000], ['overtimeMultiplier', 1, 5], ['backgroundOpacity', 0, 100], ['widgetOpacity', 20, 100], ['widgetScale', 80, 150]]) {
     if (typeof value[key] !== 'number' || !Number.isFinite(value[key]) || value[key] < min || value[key] > max) return `${({ dailySalary: '日薪', overtimeMultiplier: '加班倍率', backgroundOpacity: '背景不透明度', widgetOpacity: '挂件不透明度', widgetScale: '挂件缩放' })[key]}超出有效范围。`;

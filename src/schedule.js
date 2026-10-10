@@ -1,3 +1,5 @@
+import { resolveWorkday } from './china-calendar.js';
+
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function secondsOfDay(value) {
@@ -74,9 +76,8 @@ export function shiftFor(settings, date = new Date(), anchor) {
     to: breakInterval(item, start, clockEnd).end,
   })).sort((a, b) => a.from - b.from);
   const key = dateKey(day);
-  const override = settings.exceptions?.find(item => item.date === key);
-  const isWorkday = override ? override.working : !settings.workdays || settings.workdays.includes(day.getDay());
-  return { start, end, breaks, key, isWorkday, startAt: at(start), endAt: at(end), at };
+  const calendarDay = resolveWorkday(settings, key);
+  return { start, end, breaks, key, isWorkday: calendarDay.working, calendarDay, startAt: at(start), endAt: at(end), at };
 }
 
 export function calculateSchedule(settings, date = new Date(), options = {}) {

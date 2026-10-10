@@ -1,0 +1,30 @@
+.settings-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0 20px; gap: 4px; border-bottom: 1px solid var(--tool-line); flex: none; }
+.settings-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 13px 3px; background: transparent; color: var(--tool-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.settings-tabs button[aria-selected="true"] { border-bottom-color: var(--tool-accent); color: var(--tool-accent); font-weight: 700; }
+.settings-tabs button:focus-visible { outline: 2px solid var(--tool-accent); outline-offset: -2px; }
+[data-settings-panel][hidden] { display: none; }
+[data-settings-panel] > .form-section-title:first-child { margin-top: 0; }
+.today-heading { margin-bottom: 18px; }
+.today-heading h1 { font-size: 24px; letter-spacing: 0; }
+body[data-theme="hachiware"] .page-heading { min-height: 150px; margin-bottom: 18px; padding-top: 24px; padding-bottom: 24px; }
+.history-mobile { display: none; }
+.record-focus { padding: 14px; border-left: 3px solid var(--tool-accent); background: var(--tool-soft); }
+.backup-status { padding: 14px 0; border-block: 1px solid var(--tool-line); margin-bottom: 20px; }
+@media (max-width: 650px) {
+  .history-table-wrap { display: none; }
+  .history-mobile { display: grid; gap: 12px; }
+  .history-mobile article { border: 1px solid var(--tool-line); border-radius: 8px; padding: 14px; background: var(--tool-surface); min-width: 0; }
+  .history-mobile header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .history-mobile dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 14px 0; font-size: 12px; }
+  .history-mobile dt { color: var(--tool-muted); }
+  .history-mobile dd { margin: 5px 0 0; font-variant-numeric: tabular-nums; font-weight: 700; overflow-wrap: anywhere; }
+  .history-mobile footer { display: flex; justify-content: space-between; align-items: center; }
+  .history-mobile .text-link { margin: 0; }
+  .history-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-block: 18px; margin-bottom: 14px; }
+  .history-totals strong { font-size: 16px; }
+  .history-toolbar { align-items: flex-start; flex-wrap: wrap; }
+  .page-content, .main { min-width: 0; }
+  .today-heading h1 { font-size: 22px; }
+  .settings-tabs { padding-inline: 12px; }
+  body[data-theme="hachiware"] .page-heading { min-height: 150px; gap: 12px; }
+}

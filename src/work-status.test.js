@@ -3,7 +3,7 @@ import test from 'node:test';
 import { normalizeSettings, settingsError } from './settings.js';
 import { normalizeData, applyOperation } from './data-model.js';
 import { calculateRecord, currentCalculation, workAction } from './work-log.js';
-import { workPresentation, overtimeReminder, hasPendingPaySettings } from './work-status.js';
+import { workPresentation, overtimeReminder, hasPendingPaySettings, paySettingsRows } from './work-status.js';
 
 const settings = normalizeSettings({ dailySalary: 720, start: '09:00', end: '18:00', trackingMode: 'actual' });
 const at = (hour, minute = 0, day = 5) => new Date(2026, 9, day, hour, minute);
@@ -168,4 +168,39 @@ test('reminder preferences are validated and may change without changing the act
   assert.deepEqual(state.records, records);
   for (const hours of [0, 25, 1.5, '8', NaN]) assert.match(settingsError({ ...settings, overtimeReminderHours: hours }), /提醒/);
   assert.match(settingsError({ ...settings, overtimeReminderEnabled: 'true' }), /提醒/);
+});
+
+test('cross-date overtime reminders identify the actual shift and target record', () => {
+  const records = workAction([], settings, 'overtime', at(19));
+  const before = structuredClone(records);
+  const reminder = overtimeReminder(records[0], settings, at(10, 0, 10));
+  assert.equal(reminder.recordId, records[0].id);
+  assert.match(reminder.message, /2026-10-05 的班次仍未结束/);
+  assert.deepEqual(records, before);
+  const sameDay = overtimeReminder(records[0], { ...settings, overtimeReminderHours: 1 }, at(20));
+  assert.doesNotMatch(sameDay.message, /班次仍未结束/);
+});
+
+test('pay comparison describes each changed payroll field without mutating the snapshot', () => {
+  const before = structuredClone(settings);
+  const next = { ...settings, dailySalary: 800, start: '22:00', end: '06:00', breaks: [], workCalendar: 'cn-2025-2026-v1',
+    workdays: [1, 3], exceptions: [{ date: '2026-10-10', working: true }], paidOvertime: true, overtimeMultiplier: 2 };
+  const rows = paySettingsRows(settings, next);
+  assert.equal(rows.length, 7);
+  assert.ok(rows.every(row => row.changed));
+  assert.equal(rows[0].current, '¥720.00');
+  assert.equal(rows[0].next, '¥800.00');
+  assert.match(rows[1].next, /次日/);
+  assert.equal(rows[2].next, '无');
+  assert.equal(rows[3].next, '周一、周三');
+  assert.match(rows[4].next, /中国大陆/);
+  assert.match(rows[5].next, /2026-10-10 工作/);
+  assert.equal(rows[6].next, '计薪 · 2 倍');
+  assert.deepEqual(settings, before);
+});
+
+test('pay preview with no recorded shift has no invented current values', () => {
+  const rows = paySettingsRows(null, settings);
+  assert.ok(rows.every(row => row.current === null && !row.changed));
+  assert.ok(paySettingsRows(settings, { ...settings, theme: 'night' }).every(row => !row.changed));
 });

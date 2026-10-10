@@ -15,6 +15,8 @@ if (!app.isPackaged && process.env.PAYDROP_TEST_USER_DATA) {
 let widgetWindow, dashboardWindow, tray, dataStore, petService;
 let quitting = false;
 let moveTimer;
+let reviewRecordId = null;
+let widgetHeight;
 const windowIcon = path.join(__dirname, 'paydrop.ico');
 const windows = () => [widgetWindow, dashboardWindow, petService?.getWindow()].filter(window => window && !window.isDestroyed());
 const logPath = () => path.join(app.getPath('userData'), 'updates.log');
@@ -52,7 +54,7 @@ function applyWindowSettings() {
   if (!widgetWindow || !dataStore) return;
   const settings = dataStore.read().data.settings;
   const scale = settings.widgetScale / 100;
-  const width = Math.round(380 * scale), height = Math.round((settings.widgetPetEnabled ? 400 : 304) * scale);
+  const width = Math.round(380 * scale), height = Math.round(widgetHeight(settings) * scale);
   widgetWindow.setMinimumSize(1, 1);
   widgetWindow.setMaximumSize(1000, 1000);
   const bounds = widgetWindow.getBounds();
@@ -146,7 +148,7 @@ function openDashboard() {
     },
   });
   dashboardWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
-  dashboardWindow.on('closed', () => { dashboardWindow = null; });
+  dashboardWindow.on('closed', () => { dashboardWindow = null; reviewRecordId = null; });
 }
 
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -155,6 +157,7 @@ else {
   app.on('before-quit', () => { quitting = true; });
   app.whenReady().then(async () => {
     const model = await import(pathToFileURL(path.join(__dirname, '..', 'src', 'data-model.js')).href);
+    ({ widgetHeight } = await import(pathToFileURL(path.join(__dirname, '..', 'src', 'widget-sizing.js')).href));
     dataStore = createDataStore({
       directory: app.getPath('userData'), normalizeData: model.normalizeData, applyOperation: model.applyOperation,
       onChange: data => {
@@ -166,6 +169,19 @@ else {
     ipcMain.handle('data:restore-backup', () => dataStore.readRestoreBackup());
     ipcMain.handle('data:update', (_event, operation) => dataStore.update(operation));
     ipcMain.on('widget:open-dashboard', openDashboard);
+    ipcMain.on('widget:review-record', (_event, id) => {
+      if (typeof id !== 'string' || !/^[\w-]{1,64}$/.test(id) || !dataStore.read().data.records.some(record => record.id === id)) return;
+      reviewRecordId = id;
+      openDashboard();
+      // A newly opened renderer consumes the pending request after installing its listener.
+      dashboardWindow.webContents.send('dashboard:review-record');
+    });
+    ipcMain.handle('dashboard:take-review-record', event => {
+      if (event.sender !== dashboardWindow?.webContents) return null;
+      const id = reviewRecordId;
+      reviewRecordId = null;
+      return id;
+    });
     ipcMain.on('dashboard:show-widget', () => { dashboardWindow?.close(); showWidget(); });
     ipcMain.on('pet:reveal-widget', showWidget);
     ipcMain.on('widget:minimize', () => widgetWindow?.hide());

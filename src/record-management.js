@@ -43,6 +43,20 @@ export function requireRecordMatch(record, expected) {
   if (!record || !expected || JSON.stringify(record) !== JSON.stringify(expected)) throw new Error('此班次已在另一窗口变化，请重新打开后再操作。');
 }
 
+export function finishRecordPatch(record, end) {
+  if (!record || record.finishedAt !== null || record.segments.at(-1)?.end !== null) {
+    throw new Error('此班次已结束，请重新查看记录。');
+  }
+  if (!timestamp(end) || end <= record.segments.at(-1).start) {
+    throw new Error('结束时间须晚于最后一段开始时间。');
+  }
+  return {
+    date: record.date,
+    segments: record.segments.map((segment, index) => index === record.segments.length - 1 ? { ...segment, end } : { ...segment }),
+    finishedAt: end,
+  };
+}
+
 export function requireNoConflict(candidate, records) {
   for (const other of records) {
     if (other.id === candidate.id) continue;

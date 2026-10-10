@@ -1,7 +1,29 @@
+import { dateKey } from './schedule.js';
+import { calendarName } from './china-calendar.js';
+
 const PAY_FIELDS = ['dailySalary', 'start', 'end', 'breaks', 'workdays', 'exceptions', 'paidOvertime', 'overtimeMultiplier'];
 
 export function hasPendingPaySettings(plan, settings) {
-  return PAY_FIELDS.some(key => JSON.stringify(plan[key]) !== JSON.stringify(settings[key]));
+  return (plan.workCalendar || 'weekly') !== (settings.workCalendar || 'weekly')
+    || PAY_FIELDS.some(key => JSON.stringify(plan[key]) !== JSON.stringify(settings[key]));
+}
+
+export function paySettingsRows(before, after) {
+  const days = ['日', '一', '二', '三', '四', '五', '六'];
+  const formats = [
+    ['日薪', plan => `¥${Number(plan.dailySalary).toFixed(2)}`],
+    ['作息', plan => `${plan.start}–${plan.end}${plan.end < plan.start ? '（次日）' : ''}`],
+    ['计划休息', plan => plan.breaks.map(rest => `${rest.start}–${rest.end} ${rest.paid ? '有薪' : '无薪'}`).join('；') || '无'],
+    ['工作日', plan => [1, 2, 3, 4, 5, 6, 0].filter(day => plan.workdays.includes(day)).map(day => `周${days[day]}`).join('、') || '无'],
+    ['工作日历', plan => calendarName(plan.workCalendar)],
+    ['特殊日期', plan => plan.exceptions.map(item => `${item.date} ${item.working ? '工作' : '休息'}`).join('；') || '无'],
+    ['加班', plan => plan.paidOvertime ? `计薪 · ${plan.overtimeMultiplier} 倍` : `不计薪（倍率 ${plan.overtimeMultiplier} 倍未启用）`],
+  ];
+  return formats.map(([label, format]) => {
+    const current = before ? format(before) : null;
+    const next = format(after);
+    return { label, current, next, changed: before !== null && current !== next };
+  });
 }
 
 export function workPresentation(calculation) {
@@ -41,6 +63,7 @@ export function overtimeReminder(record, settings, date = new Date()) {
   if (!Number.isFinite(elapsed) || elapsed < threshold * 3600000) return null;
   return {
     key: `${record.id}:${start}`,
-    message: `加班记录已持续 ${threshold} 小时以上，请核对是否仍在工作。`,
+    recordId: record.id,
+    message: `${record.date !== dateKey(date) ? `${record.date} 的班次仍未结束。` : ''}加班记录已持续 ${threshold} 小时以上，请核对是否仍在工作。`,
   };
 }
