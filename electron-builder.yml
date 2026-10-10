@@ -15,6 +15,7 @@ files:
   - src/settings.js
   - src/schedule.js
   - src/work-log.js
+  - src/record-management.js
   - package.json
 win:
   icon: electron/paydrop.ico

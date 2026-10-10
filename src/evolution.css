@@ -11,6 +11,16 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .session-actions { display: flex; gap: 8px; margin-left: auto; min-height: 36px; }
 .session-actions button { min-height: 36px; }
 .session-end { color: #ac5260; border-color: #d9abb2; }
+.overtime-reminder { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 0 12px 12px; margin-bottom: 18px; border-left: 3px solid #b15364; color: var(--tool-text); }
+.overtime-reminder > div { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 220px; }
+.overtime-reminder svg { width: 17px; height: 17px; flex: none; color: #b15364; }
+.overtime-reminder p { margin: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.snapshot-notice,.settings-effect-note { margin: 0 0 18px; color: var(--tool-muted); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.settings-effect-note { font-size: 11px; margin-bottom: 12px; }
+.overtime-reminder[hidden],.snapshot-notice[hidden] { display: none; }
+.switch-row { position: relative; }
+.switch-row > input[type="checkbox"] { right: 0; top: 50%; width: 36px; height: 21px; margin: 0; transform: translateY(-50%); }
+.switch-row > i { pointer-events: none; }
 .earning-status b { font: inherit; }
 .field select { display: block; width: 100%; height: 41px; margin-top: 8px; border: 1px solid var(--tool-line); border-radius: 5px; background: var(--tool-surface); padding: 0 8px; color: var(--tool-text); font-size: 12px; }
 .field input { min-width: 0; }
@@ -49,6 +59,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 body[data-theme="hachiware"] .earnings-panel .coin-stage { width: 95px; height: 110px; top: -24px; right: 0; }
 body[data-theme="hachiware"] .dashboard-mascot { width: 95px; animation: none; }
 .metric-copy small,.page-heading p,.section-title p { color: var(--tool-muted); }
+.metric-copy small { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
 .sidebar-note { display: none; }
 body[data-theme="night"] .exception-row input { color-scheme: dark; }
 .history-table button[hidden],.config-actions input[hidden] { display: none; }

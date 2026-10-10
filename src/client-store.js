@@ -46,6 +46,18 @@ export const store = {
   },
   get data() { return state; },
   get issue() { return initialIssue; },
+  async readRestoreBackup() {
+    if (desktop?.readRestoreBackup) {
+      const result = await desktop.readRestoreBackup();
+      if (!result.ok) throw new Error(result.error);
+      return result.data;
+    }
+    if (desktop) throw new Error('请重启本地桌面预览，以启用恢复前快照。');
+    try {
+      const raw = localStorage.getItem(`${KEY}-before-restore`);
+      return raw ? normalizeData(JSON.parse(raw)) : null;
+    } catch { throw new Error('恢复前快照读取失败。'); }
+  },
   subscribe(callback) { listeners.add(callback); return () => listeners.delete(callback); },
   async dispatch(operation) {
     if (desktop?.updateData) {
@@ -59,6 +71,7 @@ export const store = {
       const next = applyOperation(current, operation);
       if (next === current) return state;
       try {
+        if (operation.type === 'restore-backup') localStorage.setItem(`${KEY}-before-restore`, JSON.stringify(current));
         const previous = localStorage.getItem(KEY);
         if (previous) localStorage.setItem(`${KEY}-backup`, previous);
         localStorage.setItem(KEY, JSON.stringify(next));
@@ -67,6 +80,9 @@ export const store = {
       return state;
     };
     if (navigator.locks) return navigator.locks.request('paydrop-data', run);
+    if (['correct-record', 'add-record', 'delete-record', 'restore-record', 'restore-backup'].includes(operation.type)) {
+      throw new Error('当前浏览器不支持安全的多窗口记录修改，请使用桌面版或新版 Edge / Chrome。');
+    }
     return run();
   },
 };

@@ -21,6 +21,12 @@ function createDataStore({ directory, normalizeData, applyOperation, onChange = 
     }
   }
   function read() { return { data: structuredClone(data), issue }; }
+  function readRestoreBackup() {
+    const safety = `${file}.before-restore`;
+    if (!io.existsSync(safety)) return { ok: true, data: null };
+    try { return { ok: true, data: normalizeData(JSON.parse(io.readFileSync(safety, 'utf8'))) }; }
+    catch { return { ok: false, error: '恢复前快照读取失败，原文件未删除。' }; }
+  }
   function update(operation, now = new Date()) {
     try {
       const next = applyOperation(data, operation, now);
@@ -29,10 +35,16 @@ function createDataStore({ directory, normalizeData, applyOperation, onChange = 
       const temporary = `${file}.tmp`;
       try {
         io.writeFileSync(temporary, JSON.stringify(next), 'utf8');
+        if (operation.type === 'restore-backup') {
+          const safety = `${file}.before-restore`;
+          io.writeFileSync(`${safety}.tmp`, JSON.stringify(data), 'utf8');
+          io.renameSync(`${safety}.tmp`, safety);
+        }
         if (primaryValid) io.copyFileSync(file, backup);
         io.renameSync(temporary, file);
       } catch (error) {
         try { io.unlinkSync(temporary); } catch {}
+        try { io.unlinkSync(`${file}.before-restore.tmp`); } catch {}
         throw error;
       }
       data = next;
@@ -45,7 +57,7 @@ function createDataStore({ directory, normalizeData, applyOperation, onChange = 
       return { ok: false, error: known };
     }
   }
-  return { read, update };
+  return { read, update, readRestoreBackup };
 }
 
 module.exports = { createDataStore };

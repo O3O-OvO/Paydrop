@@ -5,6 +5,7 @@ export const defaults = {
   breaks: [{ start: '12:00', end: '13:00' }],
   workdays: [1, 2, 3, 4, 5], exceptions: [],
   paidOvertime: false, overtimeMultiplier: 1.5, trackingMode: 'estimate',
+  overtimeReminderEnabled: true, overtimeReminderHours: 8,
   sound: false, motion: true, theme: 'hachiware',
   backgroundOpacity: 8, widgetOpacity: 100, amountPrecision: 4,
   alwaysOnTop: true, widgetScale: 100, closeToTray: true,
@@ -32,6 +33,8 @@ export function settingsError(value) {
   for (const key of ['paidOvertime', 'sound', 'motion', 'alwaysOnTop', 'closeToTray']) {
     if (typeof value[key] !== 'boolean') return '开关设置须为布尔值。';
   }
+  if ('overtimeReminderEnabled' in value && typeof value.overtimeReminderEnabled !== 'boolean') return '加班提醒开关无效。';
+  if ('overtimeReminderHours' in value && (!Number.isInteger(value.overtimeReminderHours) || value.overtimeReminderHours < 1 || value.overtimeReminderHours > 24)) return '加班提醒须为 1 到 24 小时的整数。';
   // Pet preferences are optional in previously saved settings and salary snapshots.
   for (const key of ['petEnabled', 'petRoam', 'petFollowWork', 'widgetPetEnabled']) {
     if (key in value && typeof value[key] !== 'boolean') return '桌宠开关设置无效。';

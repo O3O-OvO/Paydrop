@@ -1,4 +1,4 @@
-import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw } from 'lucide';
+import { createIcons, Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert } from 'lucide';
 import './widget.css';
 import './widget-themes.css';
 import './widget-opacity.css';
@@ -12,10 +12,11 @@ import { updateCountedAmount } from './amount-counter.js';
 import { store } from './client-store.js';
 import { defaults } from './settings.js';
 import { activeRecord, currentCalculation } from './work-log.js';
+import { workPresentation, overtimeReminder } from './work-status.js';
 import { companionMarkup, mountWidgetCompanion } from './widget-companion.js';
 import { clampWidgetScale, scaleAfterDrag, MIN_WIDGET_SCALE, MAX_WIDGET_SCALE } from './widget-sizing.js';
 
-const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw };
+const icons = { Settings2, Minus, X, Coins, Clock3, Timer, Coffee, TrendingUp, Palette, Pause, Play, RefreshCw, ClipboardCheck, PawPrint, Hand, Cookie, Accessibility, Music2, ExternalLink, Scaling, MoveDiagonal, RotateCcw, CircleAlert };
 const themes = ['minimal', 'night', 'hachiware'];
 let settings = (await store.init()).settings;
 let previousTier = null;
@@ -168,11 +169,11 @@ function render() {
   applyTheme();
   document.querySelector('#widget').innerHTML = `<section class="widget-card">
     <header class="widget-header"><div class="widget-brand"><span class="widget-brand-icon">${icon('coins')}<img src="./hachiware-face.png" alt="" /></span><strong>薪动</strong><span>PAYDROP</span></div><div class="window-actions"><button id="widget-update" title="重启安装更新" aria-label="重启安装更新" hidden>${icon('refresh-cw')}</button><button id="widget-theme" title="切换主题" aria-label="切换主题">${icon('palette')}</button><button id="widget-pause" title="${paused ? '继续实时展示' : '暂停展示'}" aria-label="${paused ? '继续实时展示' : '暂停展示'}" aria-pressed="${paused}">${icon(paused ? 'play' : 'pause')}</button><button id="widget-settings" title="打开设置与详情" aria-label="打开设置与详情">${icon('settings-2')}</button><button id="widget-minimize" title="最小化" aria-label="最小化">${icon('minus')}</button><button id="widget-close" title="退出挂件" aria-label="退出挂件">${icon('x')}</button></div></header>
-    <div class="widget-label"><span class="status-dot"></span><span id="widget-state">工作中</span><span class="widget-label-right">今日已赚取</span></div>
+    <div class="widget-label"><span class="status-dot"></span><span id="widget-state">工作中</span><button type="button" id="widget-review" class="widget-review" aria-label="核对长时加班记录" hidden>${icon('circle-alert')}<span>核对加班</span></button><span class="widget-label-right">今日已赚取</span></div>
     <div class="widget-amount"><span>¥</span><strong id="widget-earned">0.0000</strong><div class="coin-display" id="coin-display" role="img" aria-label="今日金币积累"><div class="coin-pile" id="coin-pile"><span class="coin-piece coin-one"></span><span class="coin-piece coin-two"></span><span class="coin-piece coin-three"></span><span class="coin-piece coin-four"></span><span class="coin-piece coin-five"></span><span class="coin-piece coin-six"></span></div><div id="widget-coins" class="widget-coins"></div></div></div>
     <div class="widget-rate">${icon('trending-up')}<span id="widget-rate">¥0.0000 / 秒</span><span id="widget-rate-caption" class="rate-caption">实时计薪</span></div>
     <div class="widget-progress"><span id="widget-progress-fill"></span></div>
-    <div class="widget-metrics"><div>${icon('timer')}<span>距离下班</span><strong id="widget-remaining">00:00:00</strong></div><div>${icon('clock-3')}<span>已工作</span><strong id="widget-worked">00:00:00</strong></div><div>${icon('coffee')}<span>无偿时长</span><strong id="widget-unpaid">00:00:00</strong></div></div>
+    <div class="widget-metrics"><div>${icon('timer')}<span id="widget-time-label">距计划下班</span><strong id="widget-remaining">00:00:00</strong></div><div>${icon('clock-3')}<span>已工作</span><strong id="widget-worked">00:00:00</strong></div><div>${icon('coffee')}<span>无偿时长</span><strong id="widget-unpaid">00:00:00</strong></div></div>
     ${companionMarkup()}
     <footer id="widget-session" class="widget-session"></footer>
     <button type="button" class="widget-size-toggle" id="widget-size-toggle" title="调整挂件大小" aria-label="调整挂件大小" aria-expanded="false" aria-controls="widget-size-panel">${icon('scaling')}<span id="widget-size-value">${settings.widgetScale}%</span></button>
@@ -199,6 +200,10 @@ function render() {
     if (window.paydropDesktop) window.paydropDesktop.openDashboard();
     else window.location.href = new URL('./index.html?settings=1', window.location.href).href;
   };
+  document.getElementById('widget-review').onclick = () => {
+    if (window.paydropDesktop) window.paydropDesktop.openDashboard();
+    else window.location.href = new URL('./index.html', window.location.href).href;
+  };
   document.querySelector('#widget-minimize').onclick = () => window.paydropDesktop?.minimize();
   document.querySelector('#widget-close').onclick = () => window.paydropDesktop?.close();
   document.querySelector('#widget-close').title = settings.closeToTray ? '收起到托盘' : '退出挂件';
@@ -219,6 +224,7 @@ function showUpdateState() {
 }
 function tick(allowCoin = true) {
   const result = data(paused ? frozenAt : new Date());
+  const presentation = workPresentation(result);
   const update = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
   update('widget-state', paused ? '展示暂停' : result.state);
   const earnedText = money(result.earned, settings.amountPrecision);
@@ -227,10 +233,13 @@ function tick(allowCoin = true) {
   updateCountedAmount(document.getElementById('widget-earned'), result.earned, motion, allowCoin ? spawnWidgetCoin : undefined, settings.amountPrecision);
   const width = [...earnedText].reduce((total, char) => total + (/\d/.test(char) ? .74 : .3), 0);
   document.getElementById('widget-earned').style.fontSize = `${Math.min(39, Math.floor(210 / width))}px`;
-  update('widget-rate', `¥${money(result.rate)} / 秒`);
+  update('widget-rate', `${presentation.rateLabel} ¥${money(presentation.rate)} / 秒`);
+  document.getElementById('widget-rate').title = `${presentation.detail}；标准秒薪 ¥${money(result.rate)} / 秒`;
   update('widget-rate-caption', paused ? '暂停展示' : result.mode === 'actual' ? '实际记录' : '作息估算');
   document.querySelector('.widget-label-right').textContent = result.mode === 'actual' ? '本班已记录' : '今日预计收入';
-  updateDigits(document.getElementById('widget-remaining'), duration(result.remaining), motion, 'down');
+  update('widget-time-label', presentation.timerLabel);
+  document.getElementById('widget-remaining').title = presentation.timerCaption;
+  updateDigits(document.getElementById('widget-remaining'), duration(presentation.timerSeconds), motion, presentation.timerDirection);
   updateDigits(document.getElementById('widget-worked'), duration(result.worked), motion);
   updateDigits(document.getElementById('widget-unpaid'), duration(result.unpaid), motion);
   document.getElementById('widget-progress-fill').style.width = `${result.progress}%`;
@@ -244,6 +253,10 @@ function tick(allowCoin = true) {
   }
   previousTier = tier;
   const record = activeRecord(store.data.records), last = record?.segments.at(-1);
+  const reminder = overtimeReminder(record, settings);
+  const review = document.getElementById('widget-review');
+  review.hidden = !reminder;
+  if (reminder) review.title = reminder.message;
   const session = document.getElementById('widget-session');
   const signature = `${settings.trackingMode}|${record?.id}|${last?.kind}|${result.key}|${Date.now() >= result.endAt}`;
   if (session.dataset.signature !== signature) {

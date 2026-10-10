@@ -90,7 +90,7 @@ export function calculateRecord(record, date = new Date()) {
     : base.state === '休息中' ? '休息中' : '工作中';
   const accrualRate = record.finishedAt || last?.kind === 'break' ? 0 : last?.kind === 'overtime' ? (settings.paidOvertime ? base.rate * settings.overtimeMultiplier : 0)
     : date.getTime() >= base.startAt && date.getTime() < base.endAt && !base.breaks.some(rest => !rest.paid && date.getTime() >= base.at(rest.from) && date.getTime() < base.at(rest.to)) ? base.rate : 0;
-  return { ...base, remaining: record.finishedAt ? 0 : base.remaining, worked: Math.floor(worked), overtime: Math.floor(overtime), unpaid: Math.floor(unpaid), earned, accrualRate, state, mode: 'actual', recordId: record.id };
+  return { ...base, remaining: record.finishedAt ? 0 : base.remaining, worked: Math.floor(worked), overtime: Math.floor(overtime), unpaid: Math.floor(unpaid), earned, accrualRate, overtimeActive: overtimeActive && !record.finishedAt, state, mode: 'actual', recordId: record.id };
 }
 
 export function currentCalculation(settings, records, date = new Date()) {

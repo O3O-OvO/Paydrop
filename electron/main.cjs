@@ -163,6 +163,7 @@ else {
       },
     });
     ipcMain.handle('data:read', () => dataStore.read());
+    ipcMain.handle('data:restore-backup', () => dataStore.readRestoreBackup());
     ipcMain.handle('data:update', (_event, operation) => dataStore.update(operation));
     ipcMain.on('widget:open-dashboard', openDashboard);
     ipcMain.on('dashboard:show-widget', () => { dashboardWindow?.close(); showWidget(); });

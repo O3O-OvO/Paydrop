@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('paydropDesktop', {
   minimize: () => ipcRenderer.send('widget:minimize'),
   close: () => ipcRenderer.send('widget:close'),
   readData: () => ipcRenderer.invoke('data:read'),
+  readRestoreBackup: () => ipcRenderer.invoke('data:restore-backup'),
   updateData: operation => ipcRenderer.invoke('data:update', operation),
   onDataChanged: callback => {
     const listener = (_event, data) => callback(data);
